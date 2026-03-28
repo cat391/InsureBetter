@@ -40,6 +40,7 @@ Return a JSON object with exactly these fields:
 - claim_number: or null
 - date_of_service: in YYYY-MM-DD format or null
 - date_of_denial: in YYYY-MM-DD format or null
+- insurer_address: the insurance company's mailing address for appeals, or null
 - appeal_deadline: appeal deadline date or description (e.g. "180 days from denial") or null
 - confidence: float 0.0-1.0, how confident you are in this extraction overall
 
@@ -84,11 +85,19 @@ async def extract_denial_info(raw_text: str) -> DenialExtractionResult:
         raise RuntimeError(f"LLM returned invalid JSON: {e}") from e
 
     # Build the result, using .get() for safety
-    confidence = float(data.get("confidence", 0.0))
+    raw_confidence = float(data.get("confidence", 0.0))
     denial_type = data.get("denial_type")
 
+    # Convert numeric confidence to string
+    if raw_confidence >= 0.7:
+        confidence_str = "high"
+    elif raw_confidence >= 0.5:
+        confidence_str = "medium"
+    else:
+        confidence_str = "low"
+
     # Low confidence: force denial_type to None so downstream adds caveats
-    if confidence < 0.5:
+    if confidence_str == "low":
         denial_type = None
 
     return DenialExtractionResult(
@@ -106,7 +115,8 @@ async def extract_denial_info(raw_text: str) -> DenialExtractionResult:
         claim_number=data.get("claim_number"),
         date_of_service=data.get("date_of_service"),
         date_of_denial=data.get("date_of_denial"),
+        insurer_address=data.get("insurer_address"),
         appeal_deadline=data.get("appeal_deadline"),
-        confidence=confidence,
+        confidence=confidence_str,
         raw_text=raw_text,
     )
