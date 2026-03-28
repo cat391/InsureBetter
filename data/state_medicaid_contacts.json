@@ -1,0 +1,461 @@
+{
+  "AL": {
+    "state_name": "Alabama",
+    "agency": "Alabama Medicaid Agency",
+    "appeal_body": "Fair Hearings",
+    "phone": "1-334-242-5741",
+    "online_portal": null,
+    "mailing_address": "Alabama Medicaid Agency, P.O. Box 5624, Montgomery, AL 36103-5624",
+    "notes": "Fair Hearings contact listed on Alabama Medicaid contacts page."
+  },
+  "AK": {
+    "state_name": "Alaska",
+    "agency": "Alaska Department of Health, Medicaid",
+    "appeal_body": "Fair Hearings",
+    "phone": "1-800-780-9972",
+    "online_portal": null,
+    "mailing_address": "Alaska Medicaid Fair Hearings, P.O. Box 240808, Anchorage, AK 99524",
+    "notes": "Fax 907-644-8126; email fairhearings@gainwelltechnologies.com; expedited hearings may be requested for urgent medical situations."
+  },
+  "AZ": {
+    "state_name": "Arizona",
+    "agency": "Arizona Health Care Cost Containment System (AHCCCS)",
+    "appeal_body": "AHCCCS Office of the General Counsel",
+    "phone": "1-800-654-8713 ext. 74232",
+    "online_portal": null,
+    "mailing_address": "AHCCCS Office of the General Counsel, 150 N. 18th Ave., MD-15013, Phoenix, AZ 85007",
+    "notes": "State fair hearing requests must be filed in writing with the Office of the General Counsel; fax 602-253-9115; within Maricopa County call 602-417-4232."
+  },
+  "AR": {
+    "state_name": "Arkansas",
+    "agency": "Arkansas Department of Human Services",
+    "appeal_body": "Office of Appeals and Hearings",
+    "phone": "1-501-682-8622",
+    "online_portal": null,
+    "mailing_address": "DHS Office of Appeals and Hearings, P.O. Box 1437, Slot S101, Little Rock, AR 72203-1437",
+    "notes": "State fair hearing requests go to DHS Office of Appeals and Hearings; fax 501-404-4628; email DHS.appeals@dhs.arkansas.gov."
+  },
+  "CA": {
+    "state_name": "California",
+    "agency": "California Department of Health Care Services (DHCS)",
+    "appeal_body": "California Department of Social Services, State Hearings Division",
+    "phone": "1-800-743-8525",
+    "online_portal": "https://acms.dss.ca.gov",
+    "mailing_address": "California Department of Social Services, State Hearings Division, P.O. Box 944243, MS 21-37, Sacramento, CA 94244-2430",
+    "notes": "Requests may be submitted to the county welfare department or CDSS State Hearings Division; fax (833) 281-0905."
+  },
+  "CO": {
+    "state_name": "Colorado",
+    "agency": "Health First Colorado (Colorado Department of Health Care Policy and Financing)",
+    "appeal_body": "Office of Administrative Courts (OAC)",
+    "phone": "1-303-866-2000",
+    "online_portal": "https://oac.colorado.gov",
+    "mailing_address": "Office of Administrative Courts, 1525 Sherman St., 4th Floor, Denver, CO 80203",
+    "notes": "Requests can be mailed, faxed (303-866-5909), emailed (oac-gs@state.co.us), or submitted via OAC e-filing; expedited appeals available for urgent medical need."
+  },
+  "CT": {
+    "state_name": "Connecticut",
+    "agency": "Connecticut Department of Social Services (DSS)",
+    "appeal_body": "Office of Legal Counsel, Regulations, and Administrative Hearings",
+    "phone": "1-800-462-0134",
+    "online_portal": "https://connect.ct.gov/access/jsp/MyAccount_webHelp_EN/Hearing_Request.htm",
+    "mailing_address": "DSS Office of Legal Counsel, Regulations, and Administrative Hearings, 55 Farmington Avenue, Hartford, CT 06105",
+    "notes": "Alternate phone 860-424-5760; fax 860-424-5729."
+  },
+  "DE": {
+    "state_name": "Delaware",
+    "agency": "Delaware Division of Social Services (DSS)",
+    "appeal_body": "DSS Fair Hearing Office",
+    "phone": "1-302-255-9040",
+    "online_portal": null,
+    "mailing_address": "DSS, Lewis Building, 1901 N. DuPont Highway, New Castle, DE 19720",
+    "notes": "General DSS contact information; use notice instructions for fair hearing requests."
+  },
+  "DC": {
+    "state_name": "District of Columbia",
+    "agency": "DC Department of Health Care Finance",
+    "appeal_body": "DC Office of Administrative Hearings",
+    "phone": "1-202-442-9094",
+    "online_portal": null,
+    "mailing_address": "DC Office of Administrative Hearings, 441 4th Street NW, Suite 450 North, Washington, DC 20001",
+    "notes": "Fair hearing requests must be made within 90 days of the notice; request in writing or by phone."
+  },
+  "FL": {
+    "state_name": "Florida",
+    "agency": "Agency for Health Care Administration (AHCA)",
+    "appeal_body": "Medicaid Hearing Unit / Office of Fair Hearings",
+    "phone": "1-877-254-1055",
+    "online_portal": null,
+    "mailing_address": "AHCA Medicaid Hearing Unit, P.O. Box 7237, Tallahassee, FL 32314-7237",
+    "notes": "Managed care enrollees must complete plan appeal before requesting a state fair hearing."
+  },
+  "GA": {
+    "state_name": "Georgia",
+    "agency": "Georgia Department of Community Health",
+    "appeal_body": "Office of State Administrative Hearings (OSAH)",
+    "phone": "1-877-809-0007",
+    "online_portal": null,
+    "mailing_address": "OSAH, 225 Peachtree Street NE, Suite 400, Atlanta, GA 30303",
+    "notes": "Contact OSAH for state administrative hearings; verify Medicaid fair hearing intake instructions."
+  },
+  "HI": {
+    "state_name": "Hawaii",
+    "agency": "Hawaii Department of Human Services, Med-QUEST Division",
+    "appeal_body": "Med-QUEST Eligibility Branch (Administrative Hearings)",
+    "phone": "1-800-316-8005",
+    "online_portal": null,
+    "mailing_address": "Med-QUEST Eligibility Branch, 1350 S. King Street, Suite 200, Honolulu, HI 96814",
+    "notes": "Hearing requests may be made by phone, mail, in person, or other electronic means; request must be received within 90 days of notice."
+  },
+  "ID": {
+    "state_name": "Idaho",
+    "agency": "Idaho Department of Health and Welfare",
+    "appeal_body": "Idaho Office of Administrative Hearings (OAH)",
+    "phone": "1-208-605-4300",
+    "online_portal": null,
+    "mailing_address": "Idaho Office of Administrative Hearings, P.O. Box 83720, Boise, ID 83720-0104",
+    "notes": "General OAH contact for administrative hearings; email general@oah.idaho.gov."
+  },
+  "IL": {
+    "state_name": "Illinois",
+    "agency": "Illinois Department of Healthcare and Family Services (HFS)",
+    "appeal_body": "Bureau of Administrative Hearings",
+    "phone": "1-800-435-0774",
+    "online_portal": null,
+    "mailing_address": "HFS Bureau of Administrative Hearings, 401 South Clinton Street, Chicago, IL 60607",
+    "notes": "Appeals generally must be filed within 60 days of the notice."
+  },
+  "IN": {
+    "state_name": "Indiana",
+    "agency": "Indiana Family and Social Services Administration (FSSA)",
+    "appeal_body": "Office of Administrative Law Proceedings (OALP) \u2013 FSSA Hearings",
+    "phone": "1-866-259-3573",
+    "online_portal": null,
+    "mailing_address": "FSSA OALP Hearings, 402 W. Washington St., Room E034, Indianapolis, IN 46204",
+    "notes": "Fax 317-232-4412; email fssa.appeals@oalp.in.gov."
+  },
+  "IA": {
+    "state_name": "Iowa",
+    "agency": "Iowa Department of Health and Human Services (HHS)",
+    "appeal_body": "HHS Appeals Bureau",
+    "phone": "1-888-723-9637",
+    "online_portal": null,
+    "mailing_address": "Iowa HHS Appeals Bureau, 321 E 12th Street, 4th Floor, Des Moines, IA 50319",
+    "notes": "Email appeals@hhs.iowa.gov; requests can be made in writing, in person, or by phone."
+  },
+  "KS": {
+    "state_name": "Kansas",
+    "agency": "Kansas Department of Health and Environment (KanCare)",
+    "appeal_body": "Office of Administrative Hearings (OAH)",
+    "phone": "1-800-792-4884",
+    "online_portal": null,
+    "mailing_address": "Office of Administrative Hearings, 1020 S. Kansas Ave., Topeka, KS 66612",
+    "notes": "TTY 1-800-792-4292; fax 785-296-4848; managed care fair hearings require plan appeal first."
+  },
+  "KY": {
+    "state_name": "Kentucky",
+    "agency": "Kentucky Cabinet for Health and Family Services, Department for Medicaid Services",
+    "appeal_body": "Division of Program Quality and Outcomes (State Fair Hearing)",
+    "phone": "1-800-635-2570",
+    "online_portal": null,
+    "mailing_address": "DMS Division of Program Quality and Outcomes, 275 East Main Street, 6C-C, Frankfort, KY 40621-0001",
+    "notes": "Attn: Hearing Request; fax 502-564-9523; managed care members must complete plan appeal first."
+  },
+  "LA": {
+    "state_name": "Louisiana",
+    "agency": "Louisiana Department of Health",
+    "appeal_body": "Division of Administrative Law, Health and Hospitals Section",
+    "phone": "1-225-342-5800",
+    "online_portal": "https://www.adminlaw.state.la.us",
+    "mailing_address": "Division of Administrative Law, Health and Hospitals Section, P.O. Box 4189, Baton Rouge, LA 70821-4189",
+    "notes": "Fax 225-219-9823; alternate phone 225-342-0443; online appeal form available; managed care members must appeal with plan first."
+  },
+  "ME": {
+    "state_name": "Maine",
+    "agency": "Maine Department of Health and Human Services",
+    "appeal_body": "Division of Administrative Hearings",
+    "phone": "1-207-624-5350",
+    "online_portal": null,
+    "mailing_address": "Maine DHHS Division of Administrative Hearings, 109 Capitol Street, 11 State House Station, Augusta, ME 04333-0011",
+    "notes": "Fax 207-287-8448; email DHHSadminhearings@maine.gov."
+  },
+  "MD": {
+    "state_name": "Maryland",
+    "agency": "Maryland Department of Health",
+    "appeal_body": "Maryland Office of Administrative Hearings (OAH)",
+    "phone": "1-800-388-8805",
+    "online_portal": null,
+    "mailing_address": "Maryland OAH, 11101 Gilroy Road, Hunt Valley, MD 21031",
+    "notes": "Main phone 410-229-4100; fax 410-690-8863."
+  },
+  "MA": {
+    "state_name": "Massachusetts",
+    "agency": "MassHealth",
+    "appeal_body": "Office of Medicaid, Board of Hearings",
+    "phone": "1-800-655-0338",
+    "online_portal": null,
+    "mailing_address": "Office of Medicaid, Board of Hearings, 100 Hancock Street, 6th Floor, Quincy, MA 02171",
+    "notes": "Main phone 617-847-1200; fax 617-887-8797; requests can be mailed, faxed, or emailed."
+  },
+  "MI": {
+    "state_name": "Michigan",
+    "agency": "Michigan Department of Health and Human Services (MDHHS)",
+    "appeal_body": "Michigan Office of Administrative Hearings and Rules (MOAHR)",
+    "phone": "1-800-648-3397",
+    "online_portal": null,
+    "mailing_address": "MOAHR for MDHHS, P.O. Box 30763, Lansing, MI 48909",
+    "notes": "MOAHR handles Medicaid fair hearings for MDHHS; fax 517-763-0146 available."
+  },
+  "MN": {
+    "state_name": "Minnesota",
+    "agency": "Minnesota Department of Human Services (DHS)",
+    "appeal_body": "Appeals Office",
+    "phone": "1-651-431-3600",
+    "online_portal": null,
+    "mailing_address": "DHS Appeals Office, P.O. Box 64941, St. Paul, MN 55164-0941",
+    "notes": "Fax 651-431-7523; appeal request must be in writing."
+  },
+  "MS": {
+    "state_name": "Mississippi",
+    "agency": "Mississippi Division of Medicaid",
+    "appeal_body": "Office of Administrative State Hearings",
+    "phone": "1-800-421-2408",
+    "online_portal": "https://medicaid.ms.gov",
+    "mailing_address": "Mississippi Division of Medicaid, Office of Administrative State Hearings, P.O. Box 2222, Jackson, MS 39225",
+    "notes": "Phone 601-359-6050; requests can also be made via Medicaid website contact form."
+  },
+  "MO": {
+    "state_name": "Missouri",
+    "agency": "Missouri Department of Social Services, Family Support Division",
+    "appeal_body": "Administrative Hearings Unit (FSD)",
+    "phone": "1-855-373-4636",
+    "online_portal": "https://formsportal.mo.gov/content/forms/af/moa/my-dss/family-support-division/im-1talf/im-1talf.html",
+    "mailing_address": "Family Support Division, P.O. Box 2320, Jefferson City, MO 65102",
+    "notes": "Hearing requests can be made by phone, in person at local FSD office, or in writing; IM-1TALF provides request instructions."
+  },
+  "MT": {
+    "state_name": "Montana",
+    "agency": "Montana Department of Public Health and Human Services",
+    "appeal_body": "Office of Administrative Hearings",
+    "phone": "1-406-444-2470",
+    "online_portal": null,
+    "mailing_address": "Office of Administrative Hearings, P.O. Box 202922, Helena, MT 59620",
+    "notes": "Fax 406-444-6565; email hhsofh@mt.gov."
+  },
+  "NE": {
+    "state_name": "Nebraska",
+    "agency": "Nebraska Department of Health and Human Services (DHHS)",
+    "appeal_body": "DHHS Hearing Office",
+    "phone": "1-402-471-7237",
+    "online_portal": null,
+    "mailing_address": "DHHS Hearing Office, P.O. Box 98914, Lincoln, NE 68509-8914",
+    "notes": "Email DHHS.Hearingoffice@nebraska.gov; fax (402) 742-2376."
+  },
+  "NV": {
+    "state_name": "Nevada",
+    "agency": "Nevada Department of Health and Human Services, Division of Health Care Financing and Policy",
+    "appeal_body": "Medicaid Hearings",
+    "phone": "1-775-684-3604",
+    "online_portal": null,
+    "mailing_address": "Medicaid Hearings, 9850 Double R Blvd, Suite 200, Reno, NV 89521",
+    "notes": "Fax 775-684-3610; email medicaidhearings@nvha.nv.gov."
+  },
+  "NH": {
+    "state_name": "New Hampshire",
+    "agency": "New Hampshire Department of Health and Human Services",
+    "appeal_body": "Administrative Appeals Unit",
+    "phone": "1-603-271-4292",
+    "online_portal": null,
+    "mailing_address": "NH DHHS Administrative Appeals Unit, 105 Pleasant Street, Concord, NH 03301",
+    "notes": "Fair hearing requests must be submitted in writing; contact the Administrative Appeals Unit for assistance."
+  },
+  "NJ": {
+    "state_name": "New Jersey",
+    "agency": "New Jersey Department of Human Services",
+    "appeal_body": "Office of Administrative Law (OAL)",
+    "phone": "1-609-689-4028",
+    "online_portal": null,
+    "mailing_address": "Office of Administrative Law, P.O. Box 049, Trenton, NJ 08625-0049",
+    "notes": "OAL hand-delivery address: 33 Washington Street, Newark, NJ 07102."
+  },
+  "NM": {
+    "state_name": "New Mexico",
+    "agency": "New Mexico Health Care Authority",
+    "appeal_body": "Office of Fair Hearings",
+    "phone": "1-800-283-4465",
+    "online_portal": null,
+    "mailing_address": "Office of Fair Hearings, P.O. Box 2348, Santa Fe, NM 87504",
+    "notes": "Phone 505-476-6213; fax 505-476-6215; email HCA-FairHearings@hca.nm.gov."
+  },
+  "NY": {
+    "state_name": "New York",
+    "agency": "New York State Office of Temporary and Disability Assistance (OTDA)",
+    "appeal_body": "Office of Administrative Hearings",
+    "phone": "1-800-342-3334",
+    "online_portal": "https://otda.ny.gov/hearings/request/",
+    "mailing_address": "OTDA Office of Administrative Hearings, P.O. Box 1930, Albany, NY 12201-1930",
+    "notes": "Managed care cases may use OAH Managed Care Hearing Unit, P.O. Box 22023, Albany, NY 12201-2023."
+  },
+  "NC": {
+    "state_name": "North Carolina",
+    "agency": "NC Department of Health and Human Services (NC DHHS)",
+    "appeal_body": "NC Office of Administrative Hearings",
+    "phone": "1-984-236-1860",
+    "online_portal": null,
+    "mailing_address": "NC Office of Administrative Hearings, 1711 New Hope Church Road, Raleigh, NC 27609",
+    "notes": "State fair hearings include an offer of mediation; call OAH to request."
+  },
+  "ND": {
+    "state_name": "North Dakota",
+    "agency": "North Dakota Health and Human Services",
+    "appeal_body": "Legal Advisory Unit (Appeals Supervisor)",
+    "phone": "1-800-472-2622",
+    "online_portal": null,
+    "mailing_address": "ND Health and Human Services, Legal Advisory Unit, 600 E. Boulevard Ave., Dept. 325, Bismarck, ND 58505-0250",
+    "notes": "Phone 701-328-2311; email dhslau@nd.gov; appeals can be submitted by email, fax, mail, or phone."
+  },
+  "OH": {
+    "state_name": "Ohio",
+    "agency": "Ohio Department of Job and Family Services (ODJFS)",
+    "appeal_body": "Bureau of State Hearings",
+    "phone": "1-866-635-3748",
+    "online_portal": "https://jfs.ohio.gov/about/our-offices-bureaus-and-committees/bureau-of-state-hearings",
+    "mailing_address": "ODJFS Bureau of State Hearings, P.O. Box 182825, Columbus, OH 43218-2825",
+    "notes": "Hearing request must be received within 90 days of the notice."
+  },
+  "OK": {
+    "state_name": "Oklahoma",
+    "agency": "Oklahoma Health Care Authority (OHCA)",
+    "appeal_body": "Grievance Docket Clerk (State Fair Hearing)",
+    "phone": "1-405-530-3444",
+    "online_portal": null,
+    "mailing_address": "OHCA Grievance Docket Clerk, P.O. Drawer 18497, Oklahoma City, OK 73154-0497",
+    "notes": "Email docketclerk@okhca.org; fax 405-530-3444; state fair hearing requests must be filed within required deadlines."
+  },
+  "OR": {
+    "state_name": "Oregon",
+    "agency": "Oregon Health Authority",
+    "appeal_body": "Office of Administrative Hearings (OAH)",
+    "phone": "1-503-947-1515",
+    "online_portal": null,
+    "mailing_address": "Office of Administrative Hearings, P.O. Box 14020, Salem, OR 97309-4020",
+    "notes": "Administrative offices at 4600 25th Ave NE, Suite 140, Salem, OR 97301; fax for DHS hearings 503-947-1503."
+  },
+  "PA": {
+    "state_name": "Pennsylvania",
+    "agency": "PA Department of Human Services",
+    "appeal_body": "Bureau of Hearings and Appeals",
+    "phone": "1-717-783-3950",
+    "online_portal": null,
+    "mailing_address": "DHS Bureau of Hearings and Appeals, 2330 Vartan Way, Second Floor, Harrisburg, PA 17110-9721",
+    "notes": "Appeals are filed with the DHS office that took the action; BHA schedules hearings."
+  },
+  "RI": {
+    "state_name": "Rhode Island",
+    "agency": "Rhode Island Executive Office of Health and Human Services",
+    "appeal_body": "Appeals Office",
+    "phone": "1-855-840-4774",
+    "online_portal": "https://www.healthyrhode.ri.gov",
+    "mailing_address": "Executive Office of Health and Human Services, 3 West Road, Cranston, RI 02920",
+    "notes": "Appeal requests can also be faxed to 401-223-6317; expedited appeals available."
+  },
+  "SC": {
+    "state_name": "South Carolina",
+    "agency": "South Carolina Department of Health and Human Services (SCDHHS)",
+    "appeal_body": "Division of Appeals and Hearings",
+    "phone": "1-888-549-0820",
+    "online_portal": "https://www.scdhhs.gov/appeals",
+    "mailing_address": "SCDHHS Division of Appeals and Hearings, P.O. Box 8206, Columbia, SC 29202",
+    "notes": "Fax 803-255-8251; email appeals@scdhhs.gov; expedited hearings available upon request."
+  },
+  "SD": {
+    "state_name": "South Dakota",
+    "agency": "South Dakota Department of Social Services",
+    "appeal_body": "Office of Administrative Hearings",
+    "phone": "1-605-773-6851",
+    "online_portal": null,
+    "mailing_address": "South Dakota DSS Office of Administrative Hearings, 700 Governors Drive, Pierre, SD 57501",
+    "notes": "Requests must be in writing; email admhrngs@state.sd.us."
+  },
+  "TN": {
+    "state_name": "Tennessee",
+    "agency": "TennCare",
+    "appeal_body": "TennCare Appeals",
+    "phone": "1-855-259-0701",
+    "online_portal": "https://tenncareconnect.tn.gov",
+    "mailing_address": "TennCare Appeals, P.O. Box 305200, Nashville, TN 37230",
+    "notes": "Eligibility appeals via TennCare Connect; medical appeals line 1-800-878-3192; TTY 1-866-771-7043."
+  },
+  "TX": {
+    "state_name": "Texas",
+    "agency": "Texas Health and Human Services Commission (HHSC)",
+    "appeal_body": "HHSC Fair Hearings",
+    "phone": "1-512-231-5701",
+    "online_portal": null,
+    "mailing_address": "HHSC, P.O. Box 149030, Mail Code W356, Austin, TX 78714-9030",
+    "notes": "Address is from an HHSC fair hearing request form; verify program-specific instructions on your notice."
+  },
+  "UT": {
+    "state_name": "Utah",
+    "agency": "Utah Department of Health and Human Services",
+    "appeal_body": "Office of Administrative Hearings (OAH)",
+    "phone": "1-801-538-6576",
+    "online_portal": null,
+    "mailing_address": "DHHS Office of Administrative Hearings, PO Box 143105, Salt Lake City, UT 84114-3105",
+    "notes": "Email dhhshearings@utah.gov; fax 801-536-0143; managed care members must complete plan appeal first."
+  },
+  "VT": {
+    "state_name": "Vermont",
+    "agency": "Vermont Agency of Human Services",
+    "appeal_body": "Human Services Board",
+    "phone": "1-802-828-2536",
+    "online_portal": null,
+    "mailing_address": "Human Services Board, 6 Baldwin Street, Suite 305, Montpelier, VT 05633-4302",
+    "notes": "Fax 802-828-3068; email contact.HSB@vermont.gov."
+  },
+  "VA": {
+    "state_name": "Virginia",
+    "agency": "Virginia Department of Medical Assistance Services (DMAS)",
+    "appeal_body": "DMAS Appeals Division",
+    "phone": "1-804-371-8488",
+    "online_portal": "https://www.dmas.virginia.gov/appeals/",
+    "mailing_address": "DMAS Appeals Division, 600 E. Broad Street, Richmond, VA 23219",
+    "notes": "Fax 804-452-5454; email appeals@dmas.virginia.gov; online portal available."
+  },
+  "WA": {
+    "state_name": "Washington",
+    "agency": "Washington Department of Social and Health Services (DSHS)",
+    "appeal_body": "Office of Administrative Hearings (OAH)",
+    "phone": "1-877-501-2233",
+    "online_portal": "https://oah.wa.gov",
+    "mailing_address": "Office of Administrative Hearings, P.O. Box 42489, Olympia, WA 98504-2489",
+    "notes": "OAH call center 1-800-583-8271; fax 360-664-8721."
+  },
+  "WV": {
+    "state_name": "West Virginia",
+    "agency": "West Virginia Department of Health and Human Resources",
+    "appeal_body": "Office of Inspector General, Board of Review",
+    "phone": "1-304-352-0805",
+    "online_portal": "https://oig.wv.gov/board-of-review",
+    "mailing_address": "Board of Review, State Capitol Complex, Building 6, Room 817, Charleston, WV 25305",
+    "notes": "Email OIGBOR@wv.gov; fair hearing requests may be submitted verbally or in writing."
+  },
+  "WI": {
+    "state_name": "Wisconsin",
+    "agency": "Wisconsin Division of Hearings and Appeals (DHA)",
+    "appeal_body": "Public Assistance and Social Service Hearings",
+    "phone": "1-608-266-7709",
+    "online_portal": null,
+    "mailing_address": "Division of Hearings and Appeals, P.O. Box 7875, Madison, WI 53707-7875",
+    "notes": "Fax 608-264-9885; email DHAMail@wisconsin.gov; Madison office: 4822 Madison Yards Way, 5th Floor North."
+  },
+  "WY": {
+    "state_name": "Wyoming",
+    "agency": "Wyoming Office of Administrative Hearings",
+    "appeal_body": "Office of Administrative Hearings",
+    "phone": "1-307-777-6660",
+    "online_portal": null,
+    "mailing_address": "Office of Administrative Hearings, 1800 Carey Ave., 5th Floor, Cheyenne, WY 82002",
+    "notes": "Fax 307-777-5269; email oah-team@wyo.gov."
+  }
+}
