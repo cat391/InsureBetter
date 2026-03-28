@@ -33,7 +33,7 @@ class TestDenialExtractionResult:
         result = DenialExtractionResult(
             carc_code="197",
             rarc_code="N56",
-            cpt_codes=["27447"],
+            denied_cpt_codes=["27447"],
             denial_reason="Prior auth not obtained",
             denial_type="prior_authorization",
             confidence="high",
@@ -48,7 +48,7 @@ class TestDenialExtractionResult:
         assert result.patient_name is None
         assert result.insurer_address is None
         assert result.appeal_deadline is None
-        assert result.cpt_codes == []
+        assert result.denied_cpt_codes == []
         assert result.confidence == "low"
 
 

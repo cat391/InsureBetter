@@ -42,7 +42,7 @@ Appeal deadline: 180 days from date of denial.
 SAMPLE_EXTRACTION_JSON = {
     "carc_code": "197",
     "rarc_code": "N56",
-    "cpt_codes": ["27447"],
+    "denied_cpt_codes": ["27447"],
     "denial_reason": "Prior authorization was not obtained before the service was rendered.",
     "denial_type": "prior_authorization",
     "plan_type": "ACA Marketplace",

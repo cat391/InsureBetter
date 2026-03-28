@@ -34,6 +34,14 @@ class TestLookupCarcCategory:
             assert lookup_carc_category("197") == "prior_authorization"
             assert lookup_carc_category("4") == "coding_error"
 
+    def test_strips_group_code_prefix(self):
+        p1, p2, p3 = _patch_lookup_data(carc_lookup=TEST_CARC_LOOKUP)
+        with p1, p2, p3:
+            from app.services.lookup import lookup_carc_category
+            assert lookup_carc_category("CO-197") == "prior_authorization"
+            assert lookup_carc_category("PR-4") == "coding_error"
+            assert lookup_carc_category("OA-16") == "coding_error"
+
     def test_unknown_code(self):
         p1, p2, p3 = _patch_lookup_data(carc_lookup=TEST_CARC_LOOKUP)
         with p1, p2, p3:
@@ -56,6 +64,15 @@ class TestLookupDenialCodes:
             carc_def, rarc_def = lookup_denial_codes("197", "N56")
             assert "prior authorization" in carc_def.lower()
             assert rarc_def is None  # RARC not in new data format
+
+    def test_carc_with_group_prefix(self):
+        db = _build_denial_db_dict()
+        p1, p2, p3 = _patch_lookup_data(denial_db=db, carc_lookup=TEST_CARC_LOOKUP)
+        with p1, p2, p3:
+            from app.services.lookup import lookup_denial_codes
+            carc_def, _ = lookup_denial_codes("CO-197", None)
+            assert carc_def is not None
+            assert "prior authorization" in carc_def.lower()
 
     def test_unknown_code_returns_none(self):
         db = _build_denial_db_dict()
