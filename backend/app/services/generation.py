@@ -37,6 +37,18 @@ APPLICABLE REGULATIONS:
 LEGAL/PROCEDURAL GROUNDS FOR APPEAL:
 {grounds_text}
 
+APPEAL DEADLINE:
+{appeal_deadline_text}
+
+APPEAL PROCESS:
+{appeal_process_text}
+
+REQUIRED EVIDENCE:
+{required_evidence_text}
+
+ESCALATION PATH:
+{escalation_text}
+
 {template_section}
 
 INSTRUCTIONS:
@@ -60,9 +72,13 @@ def _format_regulations(lookup: RegulatoryLookupResult) -> str:
 
     lines = []
     for i, reg in enumerate(lookup.applicable_regulations, 1):
-        lines.append(f"{i}. {reg.citation} - {reg.title}")
+        header = f"{i}. {reg.citation}"
+        if reg.title:
+            header += f" - {reg.title}"
+        lines.append(header)
         lines.append(f"   Summary: {reg.summary}")
-        lines.append(f"   Relevance: {reg.relevance}")
+        if reg.relevance:
+            lines.append(f"   Relevance: {reg.relevance}")
     return "\n".join(lines)
 
 
@@ -93,6 +109,16 @@ async def generate_appeal_letter(
             "by the patient or their healthcare provider before submission."
         )
 
+    # Format new lookup fields
+    appeal_deadline_text = lookup.appeal_deadline or "Not available"
+    appeal_process_text = "\n".join(
+        f"  {i}. {s}" for i, s in enumerate(lookup.appeal_process, 1)
+    ) if lookup.appeal_process else "Not available"
+    required_evidence_text = "\n".join(
+        f"  - {e}" for e in lookup.required_evidence
+    ) if lookup.required_evidence else "Not available"
+    escalation_text = lookup.escalation or "Not available"
+
     prompt = GENERATION_PROMPT.format(
         patient_name=extraction.patient_name or "None",
         patient_id=extraction.patient_id or "None",
@@ -111,6 +137,10 @@ async def generate_appeal_letter(
         rarc_definition=lookup.rarc_definition or "N/A",
         regulations_text=_format_regulations(lookup),
         grounds_text=_format_grounds(lookup),
+        appeal_deadline_text=appeal_deadline_text,
+        appeal_process_text=appeal_process_text,
+        required_evidence_text=required_evidence_text,
+        escalation_text=escalation_text,
         template_section=_format_template_section(lookup),
         confidence_caveat=confidence_caveat,
     )

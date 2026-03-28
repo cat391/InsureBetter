@@ -20,7 +20,7 @@ Return a JSON object with exactly these fields:
 - rarc_code: the RARC (Remittance Advice Remark Code) if present, or null
 - cpt_codes: array of CPT/HCPCS procedure codes mentioned, or empty array
 - denial_reason: the stated reason for denial, quoted from the letter
-- denial_type: classify as exactly one of: "prior_authorization", "out_of_network", "medical_necessity", "coding_billing_error", "timely_filing", "experimental_investigational", or null if unclear
+- denial_type: classify as exactly one of: "prior_authorization", "out_of_network", "medical_necessity", "coding_error", "timely_filing", "experimental", "coverage_eligibility", or null if unclear
 - plan_type: insurance plan type (HMO, PPO, ACA Marketplace, Employer-sponsored, etc.) or null
 - patient_name: or null
 - patient_id: member/subscriber ID or null
