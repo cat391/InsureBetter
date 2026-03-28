@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FAF8F4;
+    color: #7C6553;
+    font-family: 'Playfair Display', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* ── Selection cards ── */
+  .selection-card {
+    @apply relative flex items-start gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all duration-200;
+  }
+  .selection-card.unselected {
+    background-color: #ffffff;
+    border-color: #E8DDD5;
+  }
+  .selection-card.unselected:hover {
+    border-color: #A08060;
+    background-color: rgba(92, 64, 51, 0.03);
+  }
+  .selection-card.selected {
+    background-color: rgba(92, 64, 51, 0.04);
+    border-color: #A08060;
+    box-shadow: 0 2px 8px rgba(92, 64, 51, 0.08);
+  }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    @apply flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-colors duration-200;
+    background-color: rgba(255,255,255,0.55);
+    border-color: #C9B99A;
+  }
+  .upload-zone:hover,
+  .upload-zone.drag-over {
+    border-color: #A08060;
+    background-color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold shadow-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40;
+    background-color: #5C4033;
+    color: #FAF7F4;
+    focus-ring-color: #A08060;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: #7C6553;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-6 py-3 text-sm font-semibold shadow-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    border-color: #E8DDD5;
+    background-color: #ffffff;
+    color: #7C6553;
+  }
+  .btn-secondary:hover {
+    background-color: #F5F0EB;
+  }
+
+  /* ── Form elements ── */
+  .field-label {
+    @apply block text-sm font-semibold mb-1.5;
+    color: #5C4033;
+  }
+  .textarea {
+    @apply w-full rounded-lg border px-4 py-3 text-sm placeholder-opacity-50 shadow-sm transition resize-none focus:outline-none focus:ring-2;
+    background-color: #ffffff;
+    border-color: #E8DDD5;
+    color: #5C4033;
+  }
+  .textarea:focus {
+    border-color: #A08060;
+    --tw-ring-color: rgba(160, 128, 96, 0.20);
+  }
+  .input-field {
+    @apply w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm transition focus:outline-none focus:ring-2;
+    background-color: #ffffff;
+    border-color: #E8DDD5;
+    color: #5C4033;
+  }
+  .input-field:focus {
+    border-color: #A08060;
+    --tw-ring-color: rgba(160, 128, 96, 0.20);
+  }
+}
