@@ -34,6 +34,9 @@ EXTRACTED CLAIM INFORMATION:
 STATED DENIAL REASON (address this SPECIFICALLY in your argument — do not make generic claims):
 {denial_reason}
 
+SUPPORTING CLINICAL CONTEXT:
+{clinical_context}
+
 APPLICABLE REGULATIONS:
 {regulations_text}
 
@@ -59,7 +62,7 @@ INSTRUCTIONS:
 2. Address the letter to the insurance company's appeals department.{address_instruction}
 3. Cite ONLY the regulations listed above, using their exact citation strings. If no regulations are provided, write a general appeal based on the facts and note that specific regulatory citations should be verified.
 4. Reference specific appeal grounds from the list above.
-5. CRITICALLY: Build a specific argument that directly addresses the stated denial reason above. Do NOT make vague or generic claims about medical necessity. Instead, argue specifically against the insurer's reasoning (e.g., if they say Level 4 documentation only supports Level 3, argue why the clinical complexity warranted Level 4).
+5. CRITICALLY: Build a specific argument that directly addresses the stated denial reason using the SUPPORTING CLINICAL CONTEXT above. If additional procedures were ordered on the same date, argue that the ordering of diagnostic workup (imaging, labs, etc.) reflects clinical decision-making complexity that supports the service level. Do NOT just restate that the service was medically necessary — explain WHY using the available facts from the encounter.
 6. Include all relevant patient/claim identifiers.
 7. Maintain a professional, assertive but respectful tone.
 8. Do NOT include placeholder text like [MISSING], N/A, or None in the letter. If information is not available, simply omit it.
@@ -92,6 +95,8 @@ def _build_claim_info(extraction: DenialExtractionResult, lookup: RegulatoryLook
     add("Appeal Deadline", extraction.appeal_deadline)
     if extraction.denied_cpt_codes:
         add("Denied Procedure(s)", ", ".join(extraction.denied_cpt_codes))
+    if extraction.same_date_procedures:
+        add("Other Procedures on Same Date (not denied)", "; ".join(extraction.same_date_procedures))
     add("Stated Denial Reason", extraction.denial_reason or None)
     add("Denial Type", extraction.denial_type)
 
@@ -162,6 +167,19 @@ async def generate_appeal_letter(
     if additional_context:
         additional_instructions = f"ADDITIONAL INSTRUCTIONS FROM USER:\n{additional_context}\n"
 
+    # Build clinical context from same-date procedures
+    if extraction.same_date_procedures:
+        procs = ", ".join(extraction.same_date_procedures)
+        clinical_context = (
+            f"The encounter on {extraction.date_of_service or 'the date of service'} also included "
+            f"the following procedures (which were approved/paid): {procs}. "
+            "The ordering of these additional procedures reflects the clinical decision-making "
+            "complexity of the encounter and should be considered when evaluating the appropriate "
+            "service level."
+        )
+    else:
+        clinical_context = "No additional same-date procedures documented."
+
     appeal_deadline_text = lookup.appeal_deadline or "Not available"
     appeal_process_text = "\n".join(
         f"  {i}. {s}" for i, s in enumerate(lookup.appeal_process, 1)
@@ -174,6 +192,7 @@ async def generate_appeal_letter(
     prompt = GENERATION_PROMPT.format(
         claim_info=_build_claim_info(extraction, lookup),
         denial_reason=extraction.denial_reason or "Not specified",
+        clinical_context=clinical_context,
         regulations_text=_format_regulations(lookup),
         grounds_text=_format_grounds(lookup),
         appeal_deadline_text=appeal_deadline_text,

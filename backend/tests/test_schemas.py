@@ -49,6 +49,7 @@ class TestDenialExtractionResult:
         assert result.insurer_address is None
         assert result.appeal_deadline is None
         assert result.denied_cpt_codes == []
+        assert result.same_date_procedures == []
         assert result.confidence == "low"
 
 

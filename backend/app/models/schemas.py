@@ -16,6 +16,7 @@ class DenialExtractionResult(BaseModel):
     carc_code: str | None = None
     rarc_code: str | None = None
     denied_cpt_codes: list[str] = Field(default_factory=list)
+    same_date_procedures: list[str] = Field(default_factory=list)
     denial_reason: str = ""
     denial_type: str | None = None
     plan_type: str | None = None
