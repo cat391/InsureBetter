@@ -28,8 +28,8 @@ class TestGenerateAppealLetter:
     async def test_citations_extracted_from_letter(self, sample_extraction_result, sample_lookup_result, mock_gemini_generation):
         from app.services.generation import generate_appeal_letter
         result = await generate_appeal_letter(sample_extraction_result, sample_lookup_result)
-        # The sample letter includes "42 CFR 438.210(d)" which is in lookup
-        assert "42 CFR 438.210(d)" in result.citations_used
+        # The sample letter includes "42 USC 300gg-19" which is in lookup
+        assert "42 USC 300gg-19" in result.citations_used
 
     @pytest.mark.asyncio
     async def test_confidence_note_when_low_confidence(self, sample_lookup_result, mock_gemini_generation):

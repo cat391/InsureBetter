@@ -12,17 +12,18 @@ from app.models.schemas import (
 
 
 class TestDenialType:
-    def test_has_all_six_types(self):
-        assert len(DenialType) == 6
+    def test_has_all_seven_types(self):
+        assert len(DenialType) == 7
 
     def test_values(self):
         expected = {
             "prior_authorization",
             "out_of_network",
             "medical_necessity",
-            "coding_billing_error",
+            "coding_error",
             "timely_filing",
-            "experimental_investigational",
+            "experimental",
+            "coverage_eligibility",
         }
         assert {t.value for t in DenialType} == expected
 
@@ -55,7 +56,7 @@ class TestDenialExtractionResult:
 
 
 class TestRegulationEntry:
-    def test_requires_all_fields(self):
+    def test_with_all_fields(self):
         entry = RegulationEntry(
             citation="42 CFR 438.210(d)",
             title="Coverage and authorization",
@@ -64,9 +65,18 @@ class TestRegulationEntry:
         )
         assert entry.citation == "42 CFR 438.210(d)"
 
-    def test_missing_field_raises(self):
+    def test_minimal_fields(self):
+        entry = RegulationEntry(
+            citation="42 USC 300gg-19",
+            summary="Requires internal claims appeals.",
+        )
+        assert entry.citation == "42 USC 300gg-19"
+        assert entry.title == ""
+        assert entry.relevance == ""
+
+    def test_missing_required_field_raises(self):
         with pytest.raises(ValidationError):
-            RegulationEntry(citation="42 CFR", title="Test")
+            RegulationEntry(citation="42 CFR")
 
 
 class TestFullPipelineResponse:
