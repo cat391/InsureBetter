@@ -244,24 +244,24 @@ def _make_mock_gemini_response(text: str):
 
 @pytest.fixture
 def mock_gemini_extraction():
-    """Patch Gemini to return a known extraction JSON."""
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = _make_mock_gemini_response(
+    """Patch Gemini client to return a known extraction JSON."""
+    mock_client = MagicMock()
+    mock_client.models.generate_content.return_value = _make_mock_gemini_response(
         json.dumps(SAMPLE_EXTRACTION_JSON)
     )
-    with patch("app.services.extraction._model", mock_model):
-        yield mock_model
+    with patch("app.services.extraction._get_client", return_value=mock_client):
+        yield mock_client
 
 
 @pytest.fixture
 def mock_gemini_generation():
-    """Patch Gemini to return a known appeal letter."""
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = _make_mock_gemini_response(
+    """Patch Gemini client to return a known appeal letter."""
+    mock_client = MagicMock()
+    mock_client.models.generate_content.return_value = _make_mock_gemini_response(
         SAMPLE_APPEAL_LETTER
     )
-    with patch("app.services.generation._model", mock_model):
-        yield mock_model
+    with patch("app.services.generation._get_client", return_value=mock_client):
+        yield mock_client
 
 
 @pytest.fixture

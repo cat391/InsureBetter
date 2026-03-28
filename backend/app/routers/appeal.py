@@ -146,11 +146,13 @@ async def health_check():
     """Health check: verify Gemini connectivity and data file status."""
     gemini_ok = False
     try:
-        import google.generativeai as genai
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        response = model.generate_content(
-            "Reply with exactly: ok",
-            generation_config=genai.GenerationConfig(max_output_tokens=5),
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=__import__("os").environ.get("GEMINI_API_KEY", ""))
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents="Reply with exactly: ok",
+            config=types.GenerateContentConfig(max_output_tokens=5),
         )
         gemini_ok = bool(response.text)
     except Exception as e:

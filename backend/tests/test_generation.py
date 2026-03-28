@@ -10,10 +10,12 @@ from app.models.schemas import (
 from tests.conftest import SAMPLE_APPEAL_LETTER, SAMPLE_EXTRACTION_JSON, SAMPLE_DENIAL_TEXT
 
 
-def _make_mock_response(text: str):
-    mock = MagicMock()
-    mock.text = text
-    return mock
+def _make_mock_client(response_text: str):
+    mock_client = MagicMock()
+    mock_response = MagicMock()
+    mock_response.text = response_text
+    mock_client.models.generate_content.return_value = mock_response
+    return mock_client
 
 
 class TestGenerateAppealLetter:
@@ -51,11 +53,10 @@ class TestGenerateAppealLetter:
     @pytest.mark.asyncio
     async def test_empty_lookup_still_produces_letter(self, sample_extraction_result):
         empty_lookup = RegulatoryLookupResult()
-        mock_model = MagicMock()
-        mock_model.generate_content.return_value = _make_mock_response(
+        mock_client = _make_mock_client(
             "Dear Sir, I am appealing this denial. Sincerely, Patient."
         )
-        with patch("app.services.generation._model", mock_model):
+        with patch("app.services.generation._get_client", return_value=mock_client):
             from app.services.generation import generate_appeal_letter
             result = await generate_appeal_letter(sample_extraction_result, empty_lookup)
             assert isinstance(result, AppealLetterResponse)
@@ -64,9 +65,9 @@ class TestGenerateAppealLetter:
 
     @pytest.mark.asyncio
     async def test_gemini_failure_raises(self, sample_extraction_result, sample_lookup_result):
-        mock_model = MagicMock()
-        mock_model.generate_content.side_effect = Exception("Rate limited")
-        with patch("app.services.generation._model", mock_model):
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = Exception("Rate limited")
+        with patch("app.services.generation._get_client", return_value=mock_client):
             from app.services.generation import generate_appeal_letter
             with pytest.raises(RuntimeError, match="LLM generation failed"):
                 await generate_appeal_letter(sample_extraction_result, sample_lookup_result)

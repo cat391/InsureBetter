@@ -3,15 +3,25 @@ import logging
 import os
 import re
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 from app.models.schemas import DenialExtractionResult
 
 logger = logging.getLogger(__name__)
 
-# Initialize Gemini client once at module level
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-_model = genai.GenerativeModel("gemini-2.0-flash")
+MODEL = "gemini-2.5-flash"
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            raise RuntimeError("GEMINI_API_KEY environment variable is not set")
+        _client = genai.Client(api_key=api_key)
+    return _client
 
 EXTRACTION_PROMPT = """You are an insurance denial letter analyst. Extract structured information from the following denial letter text.
 
@@ -53,9 +63,10 @@ async def extract_denial_info(raw_text: str) -> DenialExtractionResult:
     prompt = EXTRACTION_PROMPT.format(raw_text=raw_text)
 
     try:
-        response = _model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
+        response = _get_client().models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.1,
             ),

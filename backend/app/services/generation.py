@@ -1,7 +1,8 @@
 import logging
 import os
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 from app.models.schemas import (
     AppealLetterResponse,
@@ -11,8 +12,18 @@ from app.models.schemas import (
 
 logger = logging.getLogger(__name__)
 
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-_model = genai.GenerativeModel("gemini-2.0-flash")
+MODEL = "gemini-2.5-flash"
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            raise RuntimeError("GEMINI_API_KEY environment variable is not set")
+        _client = genai.Client(api_key=api_key)
+    return _client
 
 GENERATION_PROMPT = """You are a healthcare insurance appeal letter writer. Generate a professional, formal appeal letter based ONLY on the facts and regulations provided below. Do NOT invent citations or regulations -- use ONLY what is provided.
 
@@ -146,9 +157,10 @@ async def generate_appeal_letter(
     )
 
     try:
-        response = _model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(temperature=0.3),
+        response = _get_client().models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.3),
         )
     except Exception as e:
         logger.error(f"Gemini generation call failed: {e}")

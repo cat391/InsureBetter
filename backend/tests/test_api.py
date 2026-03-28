@@ -26,12 +26,12 @@ def _create_simple_pdf() -> bytes:
 class TestHealthEndpoint:
     def test_health_returns_200(self, client):
         from unittest.mock import patch, MagicMock
-        mock_model = MagicMock()
+        mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.text = "ok"
-        mock_model.generate_content.return_value = mock_response
+        mock_client.models.generate_content.return_value = mock_response
 
-        with patch("google.generativeai.GenerativeModel", return_value=mock_model):
+        with patch("google.genai.Client", return_value=mock_client):
             response = client.get("/api/appeal/health")
         assert response.status_code == 200
         data = response.json()
