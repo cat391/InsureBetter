@@ -84,8 +84,8 @@ def _build_claim_info(extraction: DenialExtractionResult, lookup: RegulatoryLook
     add("Date of Service", extraction.date_of_service)
     add("Date of Denial", extraction.date_of_denial)
     add("Appeal Deadline", extraction.appeal_deadline)
-    if extraction.cpt_codes:
-        add("Denied Procedure(s)", ", ".join(extraction.cpt_codes))
+    if extraction.denied_cpt_codes:
+        add("Denied Procedure(s)", ", ".join(extraction.denied_cpt_codes))
     add("Stated Denial Reason", extraction.denial_reason or None)
     add("Denial Type", extraction.denial_type)
 

@@ -28,7 +28,7 @@ EXTRACTION_PROMPT = """You are an insurance denial letter analyst. Extract struc
 Return a JSON object with exactly these fields:
 - carc_code: the CARC (Claim Adjustment Reason Code) if present, or null
 - rarc_code: the RARC (Remittance Advice Remark Code) if present, or null
-- cpt_codes: array of CPT/HCPCS procedure codes mentioned, or empty array
+- denied_cpt_codes: array of CPT/HCPCS procedure codes that were DENIED (had $0.00 allowed or $0.00 plan paid, with a denial reason code). Do NOT include codes that were paid or partially paid. Empty array if unclear.
 - denial_reason: the stated reason for denial, quoted from the letter
 - denial_type: classify as exactly one of: "prior_authorization", "out_of_network", "medical_necessity", "coding_error", "timely_filing", "experimental", "coverage_eligibility", or null if unclear
 - plan_type: insurance plan type (HMO, PPO, ACA Marketplace, Employer-sponsored, etc.) or null
@@ -103,7 +103,7 @@ async def extract_denial_info(raw_text: str) -> DenialExtractionResult:
     return DenialExtractionResult(
         carc_code=data.get("carc_code"),
         rarc_code=data.get("rarc_code"),
-        cpt_codes=data.get("cpt_codes", []),
+        denied_cpt_codes=data.get("denied_cpt_codes", []),
         denial_reason=data.get("denial_reason", ""),
         denial_type=denial_type,
         plan_type=data.get("plan_type"),
