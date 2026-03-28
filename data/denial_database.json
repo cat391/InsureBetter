@@ -751,5 +751,134 @@
       }
     },
     "common_grounds": "Experimental/investigational denials can often be appealed by demonstrating clinical effectiveness, alignment with guidelines, and FDA status, along with patient-specific medical necessity."
+  },
+  {
+    "denial_category": "Coverage / Eligibility",
+    "category_id": "coverage_eligibility",
+    "carc_codes": [
+      "26",
+      "96",
+      "1",
+      "2",
+      "3",
+      "31",
+      "32",
+      "33",
+      "170",
+      "186"
+    ],
+    "description": "The claim was denied due to coverage or eligibility issues, including services before coverage started, non-covered services, deductible/coinsurance/copay amounts, patient not found as insured, dependent coverage issues, provider type exclusions, or level of care changes.",
+    "tracks": {
+      "aca": {
+        "regulations": [
+          {
+            "citation": "42 USC 300gg-19",
+            "summary": "Requires internal claims appeals and external review processes for group and individual health coverage."
+          },
+          {
+            "citation": "29 CFR 2590.715-2719",
+            "summary": "Implements internal claims and appeals and external review processes for group health plans and issuers."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for group health plans, including at least 180 days to appeal adverse benefit determinations and the right to submit documents in an appeal."
+          }
+        ],
+        "appeal_deadline": "Internal appeal: at least 180 days from receipt of the adverse benefit determination; external review available after final internal denial or deemed exhaustion under applicable state or federal process.",
+        "appeal_process": [
+          "Submit an internal appeal to the plan or issuer within the deadline.",
+          "Provide proof of coverage, eligibility, and any corrections to enrollment or dependent status.",
+          "If the service should be covered as an essential health benefit or preventive care, include plan documents or guidance.",
+          "If denied, request external review through the applicable state or federal process."
+        ],
+        "appeal_strategy": "Show that coverage was active, the patient was eligible, and the service is a covered benefit (including ACA essential health benefits or preventive care when applicable).",
+        "template_key": "coverage_eligibility_aca",
+        "escalation": "External review (state or federal). External review decisions are binding on the plan/issuer.",
+        "required_evidence": [
+          "Denial notice or EOB with CARC code",
+          "Proof of coverage and eligibility (ID card, enrollment confirmation)",
+          "Plan documents or benefit summaries",
+          "Provider documentation supporting level of care"
+        ]
+      },
+      "medicare": {
+        "regulations": [
+          {
+            "citation": "42 CFR 405.942",
+            "summary": "Original Medicare redetermination requests must be filed within 120 days of receipt of the initial determination notice."
+          },
+          {
+            "citation": "42 CFR 422.582",
+            "summary": "Medicare Advantage reconsideration requests must be filed within 60 days after receipt of the organization determination."
+          }
+        ],
+        "appeal_deadline": "Original Medicare: 120 days from receipt of the initial determination to request redetermination. Medicare Advantage: 60 days from receipt of the organization determination to request reconsideration.",
+        "appeal_process": [
+          "Determine whether the coverage is Original Medicare or Medicare Advantage.",
+          "File a redetermination (Original Medicare) or reconsideration (Medicare Advantage) request within the applicable deadline.",
+          "Include proof of eligibility and coverage for the service.",
+          "If denied, proceed to the next Medicare appeal level under Medicare rules."
+        ],
+        "appeal_strategy": "Demonstrate the service is covered and that eligibility or level-of-care determinations were incorrect.",
+        "template_key": "coverage_eligibility_medicare",
+        "escalation": "Proceed to the next Medicare appeal level after an adverse redetermination or reconsideration.",
+        "required_evidence": [
+          "Medicare notice of determination or denial letter",
+          "Proof of eligibility or enrollment",
+          "Relevant medical records supporting level of care"
+        ]
+      },
+      "erisa": {
+        "regulations": [
+          {
+            "citation": "29 USC 1133",
+            "summary": "Requires adequate written notice of denial and a reasonable opportunity for full and fair review by the plan."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for ERISA plans, including at least 180 days to appeal adverse benefit determinations for group health plans and the right to submit documents."
+          }
+        ],
+        "appeal_deadline": "At least 180 days from receipt of the adverse benefit determination to submit an internal appeal.",
+        "appeal_process": [
+          "Submit a written internal appeal to the plan fiduciary within the deadline.",
+          "Provide proof of eligibility, coverage dates, and plan benefits.",
+          "Address any provider-type exclusions or level-of-care determinations.",
+          "If the internal appeal is denied, use any available external review process if applicable."
+        ],
+        "appeal_strategy": "Show that the claimant was eligible and the service is covered under plan terms; correct any enrollment or dependent status errors.",
+        "template_key": "coverage_eligibility_erisa",
+        "escalation": "If available, pursue external review after final internal denial.",
+        "required_evidence": [
+          "Denial notice",
+          "Proof of coverage and eligibility",
+          "Plan documents or benefit summaries"
+        ]
+      },
+      "medicaid": {
+        "regulations": [
+          {
+            "citation": "42 CFR 431.221",
+            "summary": "Requires states to allow a request for a fair hearing within a reasonable time, not to exceed 90 days from the notice of action, and allows requests to include expedited hearing requests."
+          }
+        ],
+        "appeal_deadline": "Request a fair hearing within 90 days from the date the notice of action is mailed.",
+        "appeal_process": [
+          "Submit a fair hearing request to the state Medicaid agency within the deadline.",
+          "Provide proof of eligibility, enrollment, and coverage dates.",
+          "Include documentation supporting level-of-care or provider-type issues.",
+          "Proceed through the fair hearing process for a final decision."
+        ],
+        "appeal_strategy": "Show that coverage was active and eligibility requirements were met; provide documentation supporting the covered status of the service.",
+        "template_key": "coverage_eligibility_medicaid",
+        "escalation": "Fair hearing decision issued by the state Medicaid agency.",
+        "required_evidence": [
+          "Notice of action or denial letter",
+          "Eligibility and enrollment documentation",
+          "Medical records supporting level of care"
+        ]
+      }
+    },
+    "common_grounds": "Coverage and eligibility denials can often be appealed by proving active coverage, correcting eligibility or dependent status errors, and showing the service is a covered benefit."
   }
 ]
