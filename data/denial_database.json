@@ -247,5 +247,262 @@
       }
     },
     "common_grounds": "Medical necessity denials can often be appealed by submitting detailed clinical rationale, supporting records, and evidence that the level and frequency of care are appropriate for the diagnosis."
+  },
+  {
+    "denial_category": "Out-of-Network / Coordination of Benefits",
+    "category_id": "out_of_network",
+    "carc_codes": [
+      "11",
+      "22",
+      "109",
+      "24",
+      "119",
+      "5"
+    ],
+    "description": "The claim was denied due to out-of-network billing, coordination of benefits disputes between multiple insurers, benefit maximums being reached, or place-of-service mismatches.",
+    "tracks": {
+      "aca": {
+        "regulations": [
+          {
+            "citation": "42 USC 300gg-19",
+            "summary": "Requires internal claims appeals and external review processes for group and individual health coverage."
+          },
+          {
+            "citation": "29 CFR 2590.715-2719",
+            "summary": "Implements internal claims and appeals and external review processes for group health plans and issuers."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for group health plans, including at least 180 days to appeal adverse benefit determinations and the right to submit documents in an appeal."
+          }
+        ],
+        "appeal_deadline": "Internal appeal: at least 180 days from receipt of the adverse benefit determination; external review available after final internal denial or deemed exhaustion under applicable state or federal process.",
+        "appeal_process": [
+          "Submit an internal appeal to the plan or issuer within the deadline.",
+          "Provide documentation showing correct primary/secondary payer order and any prior payer EOBs.",
+          "If out-of-network, document network status, emergency nature of care, and any referrals or authorizations.",
+          "If denied, request external review through the applicable state or federal process."
+        ],
+        "appeal_strategy": "Argue correct coordination of benefits and network status. If care was emergency or an out-of-network provider at an in-network facility, cite No Surprises Act protections against balance billing and out-of-network cost sharing.",
+        "template_key": "out_of_network_aca",
+        "escalation": "External review (state or federal). External review decisions are binding on the plan/issuer.",
+        "required_evidence": [
+          "Denial notice or EOB with CARC code",
+          "Other payer EOBs and proof of coverage",
+          "Network status proof and referral/authorization records",
+          "Emergency department records if applicable"
+        ]
+      },
+      "medicare": {
+        "regulations": [
+          {
+            "citation": "42 CFR 405.942",
+            "summary": "Original Medicare redetermination requests must be filed within 120 days of receipt of the initial determination notice."
+          },
+          {
+            "citation": "42 CFR 422.582",
+            "summary": "Medicare Advantage reconsideration requests must be filed within 60 days after receipt of the organization determination."
+          }
+        ],
+        "appeal_deadline": "Original Medicare: 120 days from receipt of the initial determination to request redetermination. Medicare Advantage: 60 days from receipt of the organization determination to request reconsideration.",
+        "appeal_process": [
+          "Determine whether the coverage is Original Medicare or Medicare Advantage.",
+          "File a redetermination (Original Medicare) or reconsideration (Medicare Advantage) request within the applicable deadline.",
+          "Include COB documentation (other payer EOBs) and any network or place-of-service clarification.",
+          "If denied, proceed to the next Medicare appeal level under Medicare rules."
+        ],
+        "appeal_strategy": "Show the correct primary payer responsibility and, for Medicare Advantage, address network status and plan rules for out-of-network or emergency care.",
+        "template_key": "out_of_network_medicare",
+        "escalation": "Proceed to the next Medicare appeal level after an adverse redetermination or reconsideration.",
+        "required_evidence": [
+          "Medicare notice of determination or denial letter",
+          "Other payer EOBs and coverage proof",
+          "Place-of-service and emergency documentation if applicable"
+        ]
+      },
+      "erisa": {
+        "regulations": [
+          {
+            "citation": "29 USC 1133",
+            "summary": "Requires adequate written notice of denial and a reasonable opportunity for full and fair review by the plan."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for ERISA plans, including at least 180 days to appeal adverse benefit determinations for group health plans and the right to submit documents."
+          }
+        ],
+        "appeal_deadline": "At least 180 days from receipt of the adverse benefit determination to submit an internal appeal.",
+        "appeal_process": [
+          "Submit a written internal appeal to the plan fiduciary within the deadline.",
+          "Provide COB evidence and clarify network status or place-of-service issues.",
+          "If emergency or care at an in-network facility, cite applicable federal protections.",
+          "If the internal appeal is denied, use any available external review process if applicable."
+        ],
+        "appeal_strategy": "Show correct COB order and use No Surprises Act protections for emergency or in-network facility care involving out-of-network providers.",
+        "template_key": "out_of_network_erisa",
+        "escalation": "If available, pursue external review after final internal denial.",
+        "required_evidence": [
+          "Denial notice",
+          "Other payer EOBs and coverage proof",
+          "Network status and referral/authorization documentation",
+          "Emergency records if applicable"
+        ]
+      },
+      "medicaid": {
+        "regulations": [
+          {
+            "citation": "42 CFR 431.221",
+            "summary": "Requires states to allow a request for a fair hearing within a reasonable time, not to exceed 90 days from the notice of action, and allows requests to include expedited hearing requests."
+          }
+        ],
+        "appeal_deadline": "Request a fair hearing within 90 days from the date the notice of action is mailed.",
+        "appeal_process": [
+          "Submit a fair hearing request to the state Medicaid agency within the deadline.",
+          "Include COB documentation and any managed care plan records.",
+          "Provide evidence of emergency care or authorization if relevant.",
+          "Proceed through the fair hearing process for a final decision."
+        ],
+        "appeal_strategy": "Demonstrate correct COB order or plan responsibility and provide documentation supporting emergency or authorized care. No Surprises Act protections do not apply to Medicaid.",
+        "template_key": "out_of_network_medicaid",
+        "escalation": "Fair hearing decision issued by the state Medicaid agency.",
+        "required_evidence": [
+          "Notice of action or denial letter",
+          "Other payer EOBs and coverage proof",
+          "Managed care plan documentation",
+          "Emergency records or authorization"
+        ]
+      }
+    },
+    "common_grounds": "Out-of-network and COB denials can often be appealed by proving correct primary/secondary coverage, documenting emergency care or in-network facility protections, and correcting place-of-service or network status errors."
+  },
+  {
+    "denial_category": "Coding / Billing Error",
+    "category_id": "coding_error",
+    "carc_codes": [
+      "4",
+      "16",
+      "97",
+      "18",
+      "45",
+      "6",
+      "7",
+      "8",
+      "9",
+      "125",
+      "181"
+    ],
+    "description": "The claim was denied due to a coding or billing error, including wrong modifiers, missing information, duplicate submissions, bundling issues, fee schedule overages, or demographic mismatches in the claim.",
+    "tracks": {
+      "aca": {
+        "regulations": [
+          {
+            "citation": "42 USC 300gg-19",
+            "summary": "Requires internal claims appeals and external review processes for group and individual health coverage."
+          },
+          {
+            "citation": "29 CFR 2590.715-2719",
+            "summary": "Implements internal claims and appeals and external review processes for group health plans and issuers."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for group health plans, including at least 180 days to appeal adverse benefit determinations and the right to submit documents in an appeal."
+          }
+        ],
+        "appeal_deadline": "Internal appeal: at least 180 days from receipt of the adverse benefit determination; external review available after final internal denial or deemed exhaustion under applicable state or federal process.",
+        "appeal_process": [
+          "Ask the provider's billing office to correct coding or claim errors and resubmit if appropriate.",
+          "Submit an internal appeal with the corrected claim details and supporting documentation.",
+          "Include written comments and records showing the correct codes, modifiers, or billing details.",
+          "If the internal appeal is denied or deemed exhausted, request external review through the applicable state or federal process."
+        ],
+        "appeal_strategy": "Correct the claim errors and show that the original denial was based on a coding or billing issue rather than a lack of coverage or medical necessity.",
+        "template_key": "coding_error_aca",
+        "escalation": "External review (state or federal). External review decisions are binding on the plan/issuer.",
+        "required_evidence": [
+          "Denial notice or EOB with CARC code",
+          "Corrected claim form or corrected billing details",
+          "Provider letter confirming the correction",
+          "Relevant medical records supporting billed services"
+        ]
+      },
+      "medicare": {
+        "regulations": [
+          {
+            "citation": "42 CFR 405.942",
+            "summary": "Original Medicare redetermination requests must be filed within 120 days of receipt of the initial determination notice."
+          },
+          {
+            "citation": "42 CFR 422.582",
+            "summary": "Medicare Advantage reconsideration requests must be filed within 60 days after receipt of the organization determination."
+          }
+        ],
+        "appeal_deadline": "Original Medicare: 120 days from receipt of the initial determination to request redetermination. Medicare Advantage: 60 days from receipt of the organization determination to request reconsideration.",
+        "appeal_process": [
+          "Determine whether the coverage is Original Medicare or Medicare Advantage.",
+          "Request a redetermination (Original Medicare) or reconsideration (Medicare Advantage) within the applicable deadline.",
+          "Provide corrected coding or billing information from the provider.",
+          "If denied, proceed to the next Medicare appeal level under Medicare rules."
+        ],
+        "appeal_strategy": "Show that the claim should be paid once coding or billing errors are corrected and that the service was properly billed.",
+        "template_key": "coding_error_medicare",
+        "escalation": "Proceed to the next Medicare appeal level after an adverse redetermination or reconsideration.",
+        "required_evidence": [
+          "Medicare notice of determination or denial letter",
+          "Corrected claim or billing statement",
+          "Provider letter verifying corrected codes"
+        ]
+      },
+      "erisa": {
+        "regulations": [
+          {
+            "citation": "29 USC 1133",
+            "summary": "Requires adequate written notice of denial and a reasonable opportunity for full and fair review by the plan."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for ERISA plans, including at least 180 days to appeal adverse benefit determinations for group health plans and the right to submit documents."
+          }
+        ],
+        "appeal_deadline": "At least 180 days from receipt of the adverse benefit determination to submit an internal appeal.",
+        "appeal_process": [
+          "Submit a written internal appeal to the plan fiduciary within the deadline.",
+          "Include corrected claim information and documentation from the provider.",
+          "Request a full and fair review of the denial by an appropriate fiduciary.",
+          "If the internal appeal is denied, use any available external review process if applicable."
+        ],
+        "appeal_strategy": "Demonstrate that the denial was caused by a coding or billing issue and provide corrected claim documentation.",
+        "template_key": "coding_error_erisa",
+        "escalation": "If available, pursue external review after final internal denial.",
+        "required_evidence": [
+          "Denial notice",
+          "Corrected claim or billing details",
+          "Provider documentation of corrections"
+        ]
+      },
+      "medicaid": {
+        "regulations": [
+          {
+            "citation": "42 CFR 431.221",
+            "summary": "Requires states to allow a request for a fair hearing within a reasonable time, not to exceed 90 days from the notice of action, and allows requests to include expedited hearing requests."
+          }
+        ],
+        "appeal_deadline": "Request a fair hearing within 90 days from the date the notice of action is mailed.",
+        "appeal_process": [
+          "Submit a fair hearing request to the state Medicaid agency within the deadline.",
+          "Include corrected claim information and provider documentation.",
+          "Provide evidence that the denial was due to a correctable billing error.",
+          "Proceed through the fair hearing process for a final decision."
+        ],
+        "appeal_strategy": "Show the claim should be paid after correcting billing/coding errors and provide documentation of those corrections.",
+        "template_key": "coding_error_medicaid",
+        "escalation": "Fair hearing decision issued by the state Medicaid agency.",
+        "required_evidence": [
+          "Notice of action or denial letter",
+          "Corrected claim or billing details",
+          "Provider documentation of corrections"
+        ]
+      }
+    },
+    "common_grounds": "Coding and billing denials can often be resolved by correcting claim errors, resubmitting with proper codes, and documenting that the services were billed correctly."
   }
 ]
