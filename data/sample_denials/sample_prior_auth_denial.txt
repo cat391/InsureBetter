@@ -1,0 +1,43 @@
+HealthFirst Insurance Company
+Claims Department
+P.O. Box 12345
+Philadelphia, PA 19101
+
+Date: January 15, 2026
+
+RE: Claim Denial Notification
+
+Patient Name: Jane Smith
+Member ID: HF-2026-88421
+Group Number: EMP-5500
+Provider: Dr. Robert Chen, MD
+Provider NPI: 1234567890
+Claim Number: CLM-2026-00142
+
+Dear Jane Smith,
+
+We are writing to inform you that your claim for the following service has been denied:
+
+Date of Service: December 20, 2025
+Procedure Code: CPT 27447 (Total Knee Arthroplasty)
+Billed Amount: $45,000.00
+
+REASON FOR DENIAL:
+Your claim has been denied because prior authorization was not obtained before the service was rendered. Our records indicate that no pre-service authorization request was submitted for this procedure.
+
+Claim Adjustment Reason Code (CARC): 197
+Remittance Advice Remark Code (RARC): N56
+
+CARC 197: Precertification/authorization/notification absent.
+RARC N56: Procedure requires prior authorization.
+
+Plan Type: ACA Marketplace (Silver Plan)
+
+YOUR APPEAL RIGHTS:
+You have the right to appeal this decision. You must submit your appeal within 180 days of receiving this notice. To file an appeal, send a written request to the address above or call 1-800-555-0199.
+
+If your internal appeal is denied, you have the right to an external review by an independent third party. The external review decision is binding on the insurer.
+
+Sincerely,
+Claims Review Department
+HealthFirst Insurance Company
