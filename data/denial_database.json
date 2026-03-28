@@ -1,0 +1,251 @@
+[
+  {
+    "denial_category": "Prior Authorization",
+    "category_id": "prior_authorization",
+    "carc_codes": [
+      "197",
+      "15",
+      "27",
+      "204",
+      "198"
+    ],
+    "description": "The claim was denied because required prior authorization/precertification was missing, invalid, or late, or because coverage ended before the service or the service was not covered under the current plan (as coded by the listed CARCs).",
+    "tracks": {
+      "aca": {
+        "regulations": [
+          {
+            "citation": "42 USC 300gg-19",
+            "summary": "Requires internal claims appeals and external review processes for group and individual health coverage."
+          },
+          {
+            "citation": "29 CFR 2590.715-2719",
+            "summary": "Implements internal claims and appeals and external review processes for group health plans and issuers."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for group health plans, including at least 180 days to appeal adverse benefit determinations and the right to submit documents in an appeal."
+          }
+        ],
+        "appeal_deadline": "Internal appeal: at least 180 days from receipt of the adverse benefit determination; external review available after final internal denial or deemed exhaustion under applicable state or federal process.",
+        "appeal_process": [
+          "Submit an internal appeal to the plan or issuer within the deadline.",
+          "Include written comments, documents, and records supporting the prior authorization request and medical necessity.",
+          "Request expedited review if the situation is urgent per plan rules.",
+          "If the internal appeal is denied or deemed exhausted, request external review through the applicable state or federal process."
+        ],
+        "appeal_strategy": "Focus on proving that prior authorization was obtained or should be granted retroactively, that the service met medical necessity criteria, and that any timing or administrative issues were outside the patient's control.",
+        "template_key": "prior_auth_aca",
+        "escalation": "External review (state or federal). External review decisions are binding on the plan/issuer.",
+        "required_evidence": [
+          "Denial notice or EOB with CARC code",
+          "Prior authorization request and response records",
+          "Treating physician letter explaining urgency and medical necessity",
+          "Relevant clinical notes and test results"
+        ]
+      },
+      "medicare": {
+        "regulations": [
+          {
+            "citation": "42 CFR 405.942",
+            "summary": "Original Medicare redetermination requests must be filed within 120 days of receipt of the initial determination notice."
+          },
+          {
+            "citation": "42 CFR 422.582",
+            "summary": "Medicare Advantage reconsideration requests must be filed within 60 days after receipt of the organization determination."
+          }
+        ],
+        "appeal_deadline": "Original Medicare: 120 days from receipt of the initial determination to request redetermination. Medicare Advantage: 60 days from receipt of the organization determination to request reconsideration.",
+        "appeal_process": [
+          "Determine whether the coverage is Original Medicare or Medicare Advantage.",
+          "File a redetermination (Original Medicare) or reconsideration (Medicare Advantage) request within the applicable deadline.",
+          "Include supporting documentation and address the prior authorization rationale.",
+          "If denied, proceed to the next Medicare appeal level under Medicare rules."
+        ],
+        "appeal_strategy": "Show that the service was covered and medically necessary, and that prior authorization requirements were met or should be waived or granted retroactively.",
+        "template_key": "prior_auth_medicare",
+        "escalation": "Proceed to the next Medicare appeal level after an adverse redetermination or reconsideration.",
+        "required_evidence": [
+          "Medicare notice of determination or denial letter",
+          "Prior authorization documentation",
+          "Medical records and treating provider statement"
+        ]
+      },
+      "erisa": {
+        "regulations": [
+          {
+            "citation": "29 USC 1133",
+            "summary": "Requires adequate written notice of denial and a reasonable opportunity for full and fair review by the plan."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for ERISA plans, including at least 180 days to appeal adverse benefit determinations for group health plans and the right to submit documents."
+          }
+        ],
+        "appeal_deadline": "At least 180 days from receipt of the adverse benefit determination to submit an internal appeal.",
+        "appeal_process": [
+          "Submit a written internal appeal to the plan fiduciary within the deadline.",
+          "Provide documents and records supporting the prior authorization request and medical necessity.",
+          "Request a full and fair review of the denial by an appropriate fiduciary.",
+          "If the internal appeal is denied, use any available external review process if applicable."
+        ],
+        "appeal_strategy": "Emphasize compliance with prior authorization requirements or the need for retroactive authorization, and provide a clear medical necessity rationale.",
+        "template_key": "prior_auth_erisa",
+        "escalation": "If available, pursue external review after final internal denial.",
+        "required_evidence": [
+          "Denial notice",
+          "Prior authorization request/response",
+          "Provider letter and clinical records"
+        ]
+      },
+      "medicaid": {
+        "regulations": [
+          {
+            "citation": "42 CFR 431.221",
+            "summary": "Requires states to allow a request for a fair hearing within a reasonable time, not to exceed 90 days from the notice of action, and allows requests to include expedited hearing requests."
+          }
+        ],
+        "appeal_deadline": "Request a fair hearing within 90 days from the date the notice of action is mailed.",
+        "appeal_process": [
+          "Submit a fair hearing request to the state Medicaid agency within the deadline.",
+          "Include the denial notice and supporting medical documentation.",
+          "Request expedited hearing if medically urgent.",
+          "Proceed through the fair hearing process for a final decision."
+        ],
+        "appeal_strategy": "Show that prior authorization should have been granted and that the service meets medical necessity or coverage criteria.",
+        "template_key": "prior_auth_medicaid",
+        "escalation": "Fair hearing decision issued by the state Medicaid agency.",
+        "required_evidence": [
+          "Notice of action or denial letter",
+          "Prior authorization records",
+          "Clinical records and provider statement"
+        ]
+      }
+    },
+    "common_grounds": "Prior authorization denials can often be appealed by showing that authorization was requested and/or should be granted retroactively, that the service was medically necessary, and that any timing or administrative issues were not the patient's fault."
+  },
+  {
+    "denial_category": "Medical Necessity",
+    "category_id": "medical_necessity",
+    "carc_codes": [
+      "50",
+      "150",
+      "151",
+      "54",
+      "167",
+      "146"
+    ],
+    "description": "The claim was denied because the payer determined the service was not medically necessary, the documentation did not support the level or frequency of care, or the diagnosis did not justify the procedure.",
+    "tracks": {
+      "aca": {
+        "regulations": [
+          {
+            "citation": "42 USC 300gg-19",
+            "summary": "Requires internal claims appeals and external review processes for group and individual health coverage."
+          },
+          {
+            "citation": "29 CFR 2590.715-2719",
+            "summary": "Implements internal claims and appeals and external review processes for group health plans and issuers."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for group health plans, including at least 180 days to appeal adverse benefit determinations and the right to submit documents in an appeal."
+          }
+        ],
+        "appeal_deadline": "Internal appeal: at least 180 days from receipt of the adverse benefit determination; external review available after final internal denial or deemed exhaustion under applicable state or federal process.",
+        "appeal_process": [
+          "Submit an internal appeal to the plan or issuer within the deadline.",
+          "Include written comments, documents, and records supporting medical necessity and the appropriate level of care.",
+          "Request expedited review if the situation is urgent per plan rules.",
+          "If the internal appeal is denied or deemed exhausted, request external review through the applicable state or federal process."
+        ],
+        "appeal_strategy": "Demonstrate medical necessity using clinical records, physician rationale, and applicable guidelines; address why the service level and frequency are appropriate for the diagnosis.",
+        "template_key": "medical_necessity_aca",
+        "escalation": "External review (state or federal). External review decisions are binding on the plan/issuer.",
+        "required_evidence": [
+          "Denial notice or EOB with CARC code",
+          "Treating physician letter with medical necessity rationale",
+          "Relevant clinical notes, test results, and imaging",
+          "Applicable clinical guidelines or peer-reviewed literature"
+        ]
+      },
+      "medicare": {
+        "regulations": [
+          {
+            "citation": "42 CFR 405.942",
+            "summary": "Original Medicare redetermination requests must be filed within 120 days of receipt of the initial determination notice."
+          },
+          {
+            "citation": "42 CFR 422.582",
+            "summary": "Medicare Advantage reconsideration requests must be filed within 60 days after receipt of the organization determination."
+          }
+        ],
+        "appeal_deadline": "Original Medicare: 120 days from receipt of the initial determination to request redetermination. Medicare Advantage: 60 days from receipt of the organization determination to request reconsideration.",
+        "appeal_process": [
+          "Determine whether the coverage is Original Medicare or Medicare Advantage.",
+          "File a redetermination (Original Medicare) or reconsideration (Medicare Advantage) request within the applicable deadline.",
+          "Include supporting documentation explaining medical necessity and the level/frequency of care.",
+          "If denied, proceed to the next Medicare appeal level under Medicare rules."
+        ],
+        "appeal_strategy": "Align the request with Medicare coverage criteria, documenting why the service is medically necessary and supported by the patient\u2019s records.",
+        "template_key": "medical_necessity_medicare",
+        "escalation": "Proceed to the next Medicare appeal level after an adverse redetermination or reconsideration.",
+        "required_evidence": [
+          "Medicare notice of determination or denial letter",
+          "Treating provider statement of medical necessity",
+          "Medical records and diagnostic results"
+        ]
+      },
+      "erisa": {
+        "regulations": [
+          {
+            "citation": "29 USC 1133",
+            "summary": "Requires adequate written notice of denial and a reasonable opportunity for full and fair review by the plan."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for ERISA plans, including at least 180 days to appeal adverse benefit determinations for group health plans and the right to submit documents."
+          }
+        ],
+        "appeal_deadline": "At least 180 days from receipt of the adverse benefit determination to submit an internal appeal.",
+        "appeal_process": [
+          "Submit a written internal appeal to the plan fiduciary within the deadline.",
+          "Provide documents and records supporting medical necessity and the appropriate level of care.",
+          "Request a full and fair review of the denial by an appropriate fiduciary.",
+          "If the internal appeal is denied, use any available external review process if applicable."
+        ],
+        "appeal_strategy": "Document medical necessity with detailed clinical rationale and supporting records; address any plan criteria or guidelines cited in the denial.",
+        "template_key": "medical_necessity_erisa",
+        "escalation": "If available, pursue external review after final internal denial.",
+        "required_evidence": [
+          "Denial notice",
+          "Treating physician letter",
+          "Clinical records and test results"
+        ]
+      },
+      "medicaid": {
+        "regulations": [
+          {
+            "citation": "42 CFR 431.221",
+            "summary": "Requires states to allow a request for a fair hearing within a reasonable time, not to exceed 90 days from the notice of action, and allows requests to include expedited hearing requests."
+          }
+        ],
+        "appeal_deadline": "Request a fair hearing within 90 days from the date the notice of action is mailed.",
+        "appeal_process": [
+          "Submit a fair hearing request to the state Medicaid agency within the deadline.",
+          "Include the denial notice and supporting medical documentation.",
+          "Request expedited hearing if medically urgent.",
+          "Proceed through the fair hearing process for a final decision."
+        ],
+        "appeal_strategy": "Show that the service is medically necessary under Medicaid coverage standards and supported by clinical evidence.",
+        "template_key": "medical_necessity_medicaid",
+        "escalation": "Fair hearing decision issued by the state Medicaid agency.",
+        "required_evidence": [
+          "Notice of action or denial letter",
+          "Treating physician letter",
+          "Clinical records and diagnostic results"
+        ]
+      }
+    },
+    "common_grounds": "Medical necessity denials can often be appealed by submitting detailed clinical rationale, supporting records, and evidence that the level and frequency of care are appropriate for the diagnosis."
+  }
+]
