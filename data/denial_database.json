@@ -504,5 +504,126 @@
       }
     },
     "common_grounds": "Coding and billing denials can often be resolved by correcting claim errors, resubmitting with proper codes, and documenting that the services were billed correctly."
+  },
+  {
+    "denial_category": "Timely Filing",
+    "category_id": "timely_filing",
+    "carc_codes": [
+      "29",
+      "39"
+    ],
+    "description": "The claim was denied because it was submitted after the payer's filing deadline, or services were denied after authorization/precertification was requested.",
+    "tracks": {
+      "aca": {
+        "regulations": [
+          {
+            "citation": "42 USC 300gg-19",
+            "summary": "Requires internal claims appeals and external review processes for group and individual health coverage."
+          },
+          {
+            "citation": "29 CFR 2590.715-2719",
+            "summary": "Implements internal claims and appeals and external review processes for group health plans and issuers."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for group health plans, including at least 180 days to appeal adverse benefit determinations and the right to submit documents in an appeal."
+          }
+        ],
+        "appeal_deadline": "Internal appeal: at least 180 days from receipt of the adverse benefit determination; external review available after final internal denial or deemed exhaustion under applicable state or federal process.",
+        "appeal_process": [
+          "Submit an internal appeal to the plan or issuer within the deadline.",
+          "Provide proof of timely submission or evidence of circumstances that delayed filing.",
+          "If the denial is tied to retroactive authorization or precertification, include the authorization request timeline.",
+          "If denied, request external review through the applicable state or federal process."
+        ],
+        "appeal_strategy": "Show the claim was timely or should be accepted due to payer delays, retroactive eligibility, or other documented exceptions; provide proof of submission dates and communications.",
+        "template_key": "timely_filing_aca",
+        "escalation": "External review (state or federal). External review decisions are binding on the plan/issuer.",
+        "required_evidence": [
+          "Denial notice or EOB with CARC code",
+          "Proof of claim submission date (clearinghouse receipt, fax confirmation, portal screenshot)",
+          "Correspondence showing payer or provider delays",
+          "Authorization/precertification request timeline if applicable"
+        ]
+      },
+      "medicare": {
+        "regulations": [
+          {
+            "citation": "42 CFR 405.942",
+            "summary": "Original Medicare redetermination requests must be filed within 120 days of receipt of the initial determination notice."
+          },
+          {
+            "citation": "42 CFR 422.582",
+            "summary": "Medicare Advantage reconsideration requests must be filed within 60 days after receipt of the organization determination."
+          }
+        ],
+        "appeal_deadline": "Original Medicare: 120 days from receipt of the initial determination to request redetermination. Medicare Advantage: 60 days from receipt of the organization determination to request reconsideration.",
+        "appeal_process": [
+          "Determine whether the coverage is Original Medicare or Medicare Advantage.",
+          "File a redetermination (Original Medicare) or reconsideration (Medicare Advantage) request within the applicable deadline.",
+          "Include proof of timely submission or justification for late filing.",
+          "If denied, proceed to the next Medicare appeal level under Medicare rules."
+        ],
+        "appeal_strategy": "Provide evidence of timely filing or document valid reasons for late submission, such as retroactive eligibility or payer system issues.",
+        "template_key": "timely_filing_medicare",
+        "escalation": "Proceed to the next Medicare appeal level after an adverse redetermination or reconsideration.",
+        "required_evidence": [
+          "Medicare notice of determination or denial letter",
+          "Proof of submission date",
+          "Provider or payer correspondence regarding delays"
+        ]
+      },
+      "erisa": {
+        "regulations": [
+          {
+            "citation": "29 USC 1133",
+            "summary": "Requires adequate written notice of denial and a reasonable opportunity for full and fair review by the plan."
+          },
+          {
+            "citation": "29 CFR 2560.503-1",
+            "summary": "Sets minimum claims/appeal procedures for ERISA plans, including at least 180 days to appeal adverse benefit determinations for group health plans and the right to submit documents."
+          }
+        ],
+        "appeal_deadline": "At least 180 days from receipt of the adverse benefit determination to submit an internal appeal.",
+        "appeal_process": [
+          "Submit a written internal appeal to the plan fiduciary within the deadline.",
+          "Provide proof of timely submission or justification for late filing.",
+          "Include any authorization/precertification request records.",
+          "If the internal appeal is denied, use any available external review process if applicable."
+        ],
+        "appeal_strategy": "Demonstrate that the claim was timely or that strict enforcement of the deadline is unreasonable due to documented delays outside the claimant\u2019s control.",
+        "template_key": "timely_filing_erisa",
+        "escalation": "If available, pursue external review after final internal denial.",
+        "required_evidence": [
+          "Denial notice",
+          "Proof of claim submission date",
+          "Correspondence showing delays"
+        ]
+      },
+      "medicaid": {
+        "regulations": [
+          {
+            "citation": "42 CFR 431.221",
+            "summary": "Requires states to allow a request for a fair hearing within a reasonable time, not to exceed 90 days from the notice of action, and allows requests to include expedited hearing requests."
+          }
+        ],
+        "appeal_deadline": "Request a fair hearing within 90 days from the date the notice of action is mailed.",
+        "appeal_process": [
+          "Submit a fair hearing request to the state Medicaid agency within the deadline.",
+          "Include proof of timely submission or documentation supporting late filing.",
+          "Provide authorization or precertification request records if applicable.",
+          "Proceed through the fair hearing process for a final decision."
+        ],
+        "appeal_strategy": "Show the claim should be accepted due to proof of timely submission or documented exceptions such as retroactive eligibility or payer delays.",
+        "template_key": "timely_filing_medicaid",
+        "escalation": "Fair hearing decision issued by the state Medicaid agency.",
+        "required_evidence": [
+          "Notice of action or denial letter",
+          "Proof of submission date",
+          "Provider or payer correspondence regarding delays"
+        ]
+      }
+    },
+    "common_grounds": "Timely filing denials can often be appealed by showing proof of timely submission or documenting valid exceptions such as payer delays, retroactive eligibility, or administrative errors."
   }
 ]
