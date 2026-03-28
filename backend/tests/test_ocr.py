@@ -37,10 +37,21 @@ class TestExtractTextFromPdf:
         assert "test denial letter" in text
 
     def test_empty_pdf_raises_without_tesseract(self):
+        from app.utils.ocr import TESSERACT_AVAILABLE, POPPLER_AVAILABLE
+        if TESSERACT_AVAILABLE and POPPLER_AVAILABLE:
+            pytest.skip("Tesseract+Poppler installed, OCR fallback will run instead of raising")
         pdf_bytes = _create_empty_pdf()
-        # Empty PDF with no OCR available should raise
         with pytest.raises(ValueError, match="scanned|image-based|Tesseract"):
             extract_text_from_pdf(pdf_bytes)
+
+    def test_empty_pdf_falls_back_to_ocr(self):
+        from app.utils.ocr import TESSERACT_AVAILABLE, POPPLER_AVAILABLE
+        if not (TESSERACT_AVAILABLE and POPPLER_AVAILABLE):
+            pytest.skip("Tesseract+Poppler not installed")
+        pdf_bytes = _create_empty_pdf()
+        # Should not raise - OCR fallback handles it (returns empty or minimal text)
+        result = extract_text_from_pdf(pdf_bytes)
+        assert isinstance(result, str)
 
 
 class TestExtractTextDispatcher:

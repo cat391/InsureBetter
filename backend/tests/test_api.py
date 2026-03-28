@@ -25,14 +25,13 @@ def _create_simple_pdf() -> bytes:
 
 class TestHealthEndpoint:
     def test_health_returns_200(self, client):
-        # Patch the health check's Gemini call too
         from unittest.mock import patch, MagicMock
         mock_model = MagicMock()
         mock_response = MagicMock()
         mock_response.text = "ok"
         mock_model.generate_content.return_value = mock_response
 
-        with patch("app.routers.appeal.genai.GenerativeModel", return_value=mock_model):
+        with patch("google.generativeai.GenerativeModel", return_value=mock_model):
             response = client.get("/api/appeal/health")
         assert response.status_code == 200
         data = response.json()
