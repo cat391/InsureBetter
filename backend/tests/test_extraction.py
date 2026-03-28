@@ -30,7 +30,7 @@ class TestExtractDenialInfo:
         assert isinstance(result, DenialExtractionResult)
         assert result.carc_code == "197"
         assert result.denial_type == "prior_authorization"
-        assert result.confidence == 0.95
+        assert result.confidence == "high"
 
     @pytest.mark.asyncio
     async def test_strips_markdown_fences(self):
@@ -51,7 +51,7 @@ class TestExtractDenialInfo:
             from app.services.extraction import extract_denial_info
             result = await extract_denial_info("test text")
             assert result.denial_type is None
-            assert result.confidence == 0.3
+            assert result.confidence == "low"
 
     @pytest.mark.asyncio
     async def test_malformed_json_raises_runtime_error(self):

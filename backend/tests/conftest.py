@@ -38,6 +38,7 @@ Plan Type: ACA Marketplace (Silver Plan)
 Appeal deadline: 180 days from date of denial.
 """
 
+# This is what Gemini returns (float confidence) — extraction.py converts to string
 SAMPLE_EXTRACTION_JSON = {
     "carc_code": "197",
     "rarc_code": "N56",
@@ -50,6 +51,7 @@ SAMPLE_EXTRACTION_JSON = {
     "provider_name": "Dr. Robert Chen, MD",
     "provider_npi": "1234567890",
     "insurance_company": "HealthFirst Insurance Company",
+    "insurer_address": "P.O. Box 12345, Philadelphia, PA 19101",
     "claim_number": "CLM-2026-00142",
     "date_of_service": "2025-12-20",
     "date_of_denial": "2026-01-15",
@@ -162,8 +164,10 @@ def sample_denial_text():
 
 @pytest.fixture
 def sample_extraction_result():
+    # Use string confidence (post-conversion) for fixtures used by generation/chat tests
+    data = {**SAMPLE_EXTRACTION_JSON, "confidence": "high"}
     return DenialExtractionResult(
-        **SAMPLE_EXTRACTION_JSON,
+        **data,
         raw_text=SAMPLE_DENIAL_TEXT,
     )
 
@@ -265,14 +269,29 @@ def mock_gemini_generation():
 
 
 @pytest.fixture
-def mock_gemini_both(mock_gemini_extraction, mock_gemini_generation):
-    """Patch both Gemini models."""
+def mock_gemini_chat():
+    """Patch Gemini client for chat service."""
+    mock_client = MagicMock()
+    # Field update detection returns empty (no field changes)
+    # Summary returns a simple message
+    mock_client.models.generate_content.side_effect = [
+        _make_mock_gemini_response("{}"),  # field updates
+        _make_mock_gemini_response(SAMPLE_APPEAL_LETTER),  # regenerated letter
+        _make_mock_gemini_response("Letter regenerated with your changes."),  # summary
+    ]
+    with patch("app.services.chat._get_client", return_value=mock_client):
+        yield mock_client
+
+
+@pytest.fixture
+def mock_gemini_all(mock_gemini_extraction, mock_gemini_generation, mock_gemini_chat):
+    """Patch all Gemini clients."""
     yield
 
 
 @pytest.fixture
-def client(mock_gemini_both):
-    """FastAPI TestClient with mocked Gemini."""
+def client(mock_gemini_all):
+    """FastAPI TestClient with all Gemini mocked."""
     from app.main import app
     with TestClient(app) as c:
         yield c

@@ -36,23 +36,20 @@ class TestDenialExtractionResult:
             cpt_codes=["27447"],
             denial_reason="Prior auth not obtained",
             denial_type="prior_authorization",
-            confidence=0.95,
+            confidence="high",
             raw_text="some text",
         )
         assert result.carc_code == "197"
-        assert result.confidence == 0.95
+        assert result.confidence == "high"
 
     def test_optional_fields_default_none(self):
         result = DenialExtractionResult(raw_text="text")
         assert result.carc_code is None
         assert result.patient_name is None
+        assert result.insurer_address is None
         assert result.appeal_deadline is None
         assert result.cpt_codes == []
-        assert result.confidence == 0.0
-
-    def test_rejects_bad_confidence_type(self):
-        with pytest.raises(ValidationError):
-            DenialExtractionResult(confidence="not_a_float", raw_text="text")
+        assert result.confidence == "low"
 
 
 class TestRegulationEntry:

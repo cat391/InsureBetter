@@ -85,6 +85,45 @@ class TestExtractOnlyEndpoint:
         assert "confidence" in data
 
 
+class TestGenerateEndpoint:
+    def test_generate_returns_pipeline_response(self, client):
+        from tests.conftest import SAMPLE_EXTRACTION_JSON
+        request_body = {
+            "extraction": {**SAMPLE_EXTRACTION_JSON, "confidence": "high", "raw_text": "test"},
+            "track": "aca",
+        }
+        response = client.post("/api/appeal/generate", json=request_body)
+        assert response.status_code == 200
+        data = response.json()
+        assert "extraction" in data
+        assert "lookup" in data
+        assert "appeal_letter" in data
+        assert "processing_time_seconds" in data
+
+
+class TestChatEndpoint:
+    def test_chat_returns_response(self, client):
+        from tests.conftest import SAMPLE_EXTRACTION_JSON
+        request_body = {
+            "user_message": "Make the tone more assertive",
+            "extraction": {**SAMPLE_EXTRACTION_JSON, "confidence": "high", "raw_text": "test"},
+            "lookup": {
+                "carc_definition": "test",
+                "applicable_regulations": [],
+                "appeal_grounds": [],
+            },
+            "conversation_history": [],
+            "additional_context": "",
+        }
+        response = client.post("/api/appeal/chat", json=request_body)
+        assert response.status_code == 200
+        data = response.json()
+        assert "appeal_letter" in data
+        assert "assistant_message" in data
+        assert "extraction" in data
+        assert "conversation_history" in data
+
+
 class TestCORS:
     def test_cors_headers_present(self, client):
         response = client.options(

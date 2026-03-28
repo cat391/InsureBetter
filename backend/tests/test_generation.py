@@ -36,13 +36,13 @@ class TestGenerateAppealLetter:
     @pytest.mark.asyncio
     async def test_confidence_note_when_low_confidence(self, sample_lookup_result, mock_gemini_generation):
         low_conf_extraction = DenialExtractionResult(
-            **{**SAMPLE_EXTRACTION_JSON, "confidence": 0.5},
+            **{**SAMPLE_EXTRACTION_JSON, "confidence": "medium"},
             raw_text=SAMPLE_DENIAL_TEXT,
         )
         from app.services.generation import generate_appeal_letter
         result = await generate_appeal_letter(low_conf_extraction, sample_lookup_result)
         assert result.confidence_note is not None
-        assert "50%" in result.confidence_note
+        assert "medium" in result.confidence_note
 
     @pytest.mark.asyncio
     async def test_no_confidence_note_when_high(self, sample_extraction_result, sample_lookup_result, mock_gemini_generation):
