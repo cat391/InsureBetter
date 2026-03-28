@@ -6,9 +6,10 @@ class DenialType(str, Enum):
     PRIOR_AUTH = "prior_authorization"
     OUT_OF_NETWORK = "out_of_network"
     MEDICAL_NECESSITY = "medical_necessity"
-    CODING_ERROR = "coding_billing_error"
+    CODING_ERROR = "coding_error"
     TIMELY_FILING = "timely_filing"
-    EXPERIMENTAL = "experimental_investigational"
+    EXPERIMENTAL = "experimental"
+    COVERAGE_ELIGIBILITY = "coverage_eligibility"
 
 
 class DenialExtractionResult(BaseModel):
@@ -33,9 +34,9 @@ class DenialExtractionResult(BaseModel):
 
 class RegulationEntry(BaseModel):
     citation: str
-    title: str
     summary: str
-    relevance: str
+    title: str = ""
+    relevance: str = ""
 
 
 class RegulatoryLookupResult(BaseModel):
@@ -45,6 +46,11 @@ class RegulatoryLookupResult(BaseModel):
     appeal_grounds: list[str] = Field(default_factory=list)
     template_language: str | None = None
     denial_type_matched: str | None = None
+    appeal_deadline: str | None = None
+    appeal_process: list[str] = Field(default_factory=list)
+    appeal_strategy: str | None = None
+    required_evidence: list[str] = Field(default_factory=list)
+    escalation: str | None = None
 
 
 class AppealLetterResponse(BaseModel):
