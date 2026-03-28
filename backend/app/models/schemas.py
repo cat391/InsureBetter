@@ -27,8 +27,9 @@ class DenialExtractionResult(BaseModel):
     claim_number: str | None = None
     date_of_service: str | None = None
     date_of_denial: str | None = None
+    insurer_address: str | None = None
     appeal_deadline: str | None = None
-    confidence: float = 0.0
+    confidence: str = "low"
     raw_text: str = ""
 
 
@@ -77,3 +78,29 @@ class HealthResponse(BaseModel):
     status: str
     gemini_connected: bool
     data_files_loaded: bool
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class GenerateRequest(BaseModel):
+    extraction: DenialExtractionResult
+    track: str = "aca"
+
+
+class ChatRequest(BaseModel):
+    user_message: str
+    extraction: DenialExtractionResult
+    lookup: RegulatoryLookupResult
+    conversation_history: list[ChatMessage] = Field(default_factory=list)
+    additional_context: str = ""
+
+
+class ChatResponse(BaseModel):
+    appeal_letter: AppealLetterResponse
+    assistant_message: str
+    extraction: DenialExtractionResult
+    additional_context: str
+    conversation_history: list[ChatMessage]
