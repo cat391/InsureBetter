@@ -54,11 +54,20 @@ def data_files_loaded() -> bool:
     return bool(_denial_database) or bool(_carc_lookup)
 
 
+def _normalize_carc_code(code: str) -> str:
+    """Strip group code prefix (CO-, PR-, OA-, PI-) from CARC codes.
+    EOBs show codes like 'CO-50' but our lookup keys are just '50'."""
+    import re
+    match = re.match(r'^[A-Z]{1,2}-?(\d+)$', code.strip())
+    return match.group(1) if match else code
+
+
 def lookup_carc_category(carc_code: str | None) -> str | None:
     """Look up which denial category a CARC code belongs to."""
     if not carc_code:
         return None
-    return _carc_lookup.get(carc_code)
+    normalized = _normalize_carc_code(carc_code)
+    return _carc_lookup.get(normalized)
 
 
 def lookup_denial_codes(
@@ -70,7 +79,8 @@ def lookup_denial_codes(
     rarc_def = None
 
     if carc_code:
-        category_id = _carc_lookup.get(carc_code)
+        normalized = _normalize_carc_code(carc_code)
+        category_id = _carc_lookup.get(normalized)
         if category_id and category_id in _denial_database:
             entry = _denial_database[category_id]
             carc_def = entry.get("description")
