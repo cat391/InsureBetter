@@ -4,10 +4,15 @@ import time
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.models.schemas import (
+    AppealLetterResponse,
+    ChatRequest,
+    ChatResponse,
     DenialExtractionResult,
     ErrorResponse,
     FullPipelineResponse,
+    GenerateRequest,
     HealthResponse,
+    RegulatoryLookupResult,
 )
 from app.services.extraction import extract_denial_info
 from app.services.generation import generate_appeal_letter
@@ -139,6 +144,49 @@ async def extract_only(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail=str(e))
 
     return extraction
+
+
+@router.post("/generate", response_model=FullPipelineResponse)
+async def generate_from_extraction(request: GenerateRequest):
+    """Generate/regenerate appeal letter from extraction data. Runs lookup + generation."""
+    start = time.perf_counter()
+
+    lookup = perform_full_lookup(request.extraction, track=request.track)
+
+    try:
+        appeal_letter = await generate_appeal_letter(request.extraction, lookup)
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=ErrorResponse(
+                error="Letter generation failed", detail=str(e), stage="generation"
+            ).model_dump(),
+        )
+
+    elapsed = time.perf_counter() - start
+
+    return FullPipelineResponse(
+        extraction=request.extraction,
+        lookup=lookup,
+        appeal_letter=appeal_letter,
+        processing_time_seconds=round(elapsed, 2),
+    )
+
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat_refine(request: ChatRequest):
+    """Chat endpoint: refine appeal letter through pipeline-grounded conversation."""
+    from app.services.chat import process_chat_message
+
+    try:
+        return await process_chat_message(request)
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=ErrorResponse(
+                error="Chat processing failed", detail=str(e), stage="chat"
+            ).model_dump(),
+        )
 
 
 @router.get("/health", response_model=HealthResponse)
