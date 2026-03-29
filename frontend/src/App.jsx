@@ -91,26 +91,7 @@ export default function App() {
       >
         {/* Logo + Name */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          {/* Circular medical-document logo */}
-          <div
-            className="rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ width: 36, height: 36, background: '#D4CC6A', border: '4px solid #3A1A00' }}
-          >
-            <svg width="20" height="22" viewBox="0 0 19 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Document body */}
-              <path d="M1.5 2C1.5 1.17 2.17 0.5 3 0.5H11.5L17.5 6.5V19C17.5 19.83 16.83 20.5 16 20.5H3C2.17 20.5 1.5 19.83 1.5 19V2Z"
-                stroke="#2A1000" strokeWidth="2" fill="rgba(255,255,255,0.18)" />
-              {/* Folded corner */}
-              <path d="M11.5 0.5V6.5H17.5" stroke="#2A1000" strokeWidth="2" fill="none" />
-              {/* Medical cross — vertical */}
-              <rect x="7.75" y="7.5" width="3.5" height="8" rx="0.6" fill="#5C2A00" />
-              {/* Medical cross — horizontal */}
-              <rect x="5" y="10.25" width="9" height="3.5" rx="0.6" fill="#5C2A00" />
-              {/* Bottom lines */}
-              <path d="M3.5 17H15.5" stroke="#2A1000" strokeWidth="1.8" strokeLinecap="round" />
-              <path d="M3.5 19H10" stroke="#2A1000" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </div>
+          <img src="/logo.png" alt="InsureBetter" className="flex-shrink-0 rounded-full" style={{ width: 36, height: 36 }} />
           <span
             className="font-playfair font-bold tracking-tight"
             style={{ fontSize: 18, lineHeight: 1 }}
