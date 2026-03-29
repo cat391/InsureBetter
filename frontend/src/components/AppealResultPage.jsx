@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import { diffLines } from 'diff'
 
 const HIGHLIGHT_COLORS = [
@@ -405,7 +406,7 @@ export default function AppealResultPage({ onBack, formData }) {
             </div>
           ) : letterText ? (
             <div className="px-10 py-8 text-sm leading-relaxed">
-              <ReactMarkdown components={markdownComponents}>{letterText}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkBreaks]} components={markdownComponents}>{letterText}</ReactMarkdown>
             </div>
           ) : (
             <div className="px-10 py-16 text-center">
