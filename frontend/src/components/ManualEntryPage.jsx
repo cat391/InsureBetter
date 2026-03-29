@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FIELD_VALIDATORS } from '../utils/validation'
 
 const FIELD_HINTS = [
   { label: 'Denial Code(s)', placeholder: 'e.g. CO-4, PR-96, CARC 50…' },
@@ -15,8 +16,20 @@ export default function ManualEntryPage({ onBack, onGenerate }) {
   )
   const [planDetails, setPlanDetails] = useState('')
   const [denialReason, setDenialReason] = useState('')
+  const [warnings, setWarnings] = useState(
+    Object.fromEntries(FIELD_HINTS.map((f) => [f.label, null]))
+  )
 
-  const setField = (label, val) => setFields((prev) => ({ ...prev, [label]: val }))
+  const setField = (label, val) => {
+    setFields((prev) => ({ ...prev, [label]: val }))
+    if (warnings[label]) setWarnings((prev) => ({ ...prev, [label]: null }))
+  }
+
+  const handleBlur = (label, value) => {
+    const validator = FIELD_VALIDATORS[label]
+    const warning = validator ? validator(value.trim()) : null
+    setWarnings((prev) => ({ ...prev, [label]: warning }))
+  }
 
   const canSubmit = planDetails.trim().length > 0 || denialReason.trim().length > 0
 
@@ -45,8 +58,12 @@ export default function ManualEntryPage({ onBack, onGenerate }) {
                     placeholder={f.placeholder}
                     value={fields[f.label]}
                     onChange={(e) => setField(f.label, e.target.value)}
-                    className="input-field"
+                    onBlur={(e) => handleBlur(f.label, e.target.value)}
+                    className={warnings[f.label] ? 'input-field input-field-warn' : 'input-field'}
                   />
+                  {warnings[f.label] && (
+                    <p className="warning-text">{warnings[f.label]}</p>
+                  )}
                 </div>
               ))}
             </div>
