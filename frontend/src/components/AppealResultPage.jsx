@@ -1,14 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-
-const APPEAL_PDF_URL = null
-const CHAT_API_ENDPOINT = null
-const INITIAL_SUMMARY_API = null
-
-const PLACEHOLDER_SUMMARY =
-  `Your appeal disputes the denial of **CPT 27447** (Total Knee Replacement) under code **CO-50**.\n\n` +
-  `Key arguments: prior auth #PA-9988, ICD-10 M17.11, and Plan Section 5.2. You have **30 days** to file.\n\n` +
-  `What would you like to strengthen?`
+import { diffLines } from 'diff'
 
 const HIGHLIGHT_COLORS = [
   { label: 'Yellow', bg: 'rgba(253,224,71,0.50)', swatch: '#fde047' },
@@ -182,6 +174,93 @@ function SelectionToolbar({ popup, onHighlight, onAskAbout }) {
   )
 }
 
+/* ── Diff view: shows red/green inline diff between old and new letter ── */
+function DiffView({ oldText, newText }) {
+  const changes = diffLines(oldText, newText)
+  return (
+    <div className="px-10 py-8 text-sm leading-relaxed space-y-1" style={{ color: '#7C6553' }}>
+      {changes.map((part, i) => {
+        if (part.added) {
+          return part.value.split('\n').filter(l => l).map((line, j) => (
+            <p key={`${i}-${j}`} style={{ background: 'rgba(34,197,94,0.15)', padding: '2px 4px', borderRadius: 2 }}>
+              <MarkdownLine text={line} />
+            </p>
+          ))
+        }
+        if (part.removed) {
+          return part.value.split('\n').filter(l => l).map((line, j) => (
+            <p key={`${i}-${j}`} style={{ background: 'rgba(239,68,68,0.15)', textDecoration: 'line-through', padding: '2px 4px', borderRadius: 2, opacity: 0.7 }}>
+              <MarkdownLine text={line} />
+            </p>
+          ))
+        }
+        return part.value.split('\n').filter(l => l).map((line, j) => (
+          <p key={`${i}-${j}`}><MarkdownLine text={line} /></p>
+        ))
+      })}
+    </div>
+  )
+}
+
+/* ── Letter view: renders letter_text with markdown support ── */
+function LetterView({ text }) {
+  if (!text) {
+    return (
+      <div className="px-10 py-16 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            {[0, 150, 300].map((delay) => (
+              <span key={delay} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#C9B99A', animationDelay: `${delay}ms` }} />
+            ))}
+          </div>
+          <p className="text-sm" style={{ color: '#A08060' }}>Analyzing your document and generating appeal...</p>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="px-10 py-8 text-sm leading-relaxed space-y-4" style={{ color: '#7C6553' }}>
+      {text.split('\n').map((line, i) => {
+        if (!line.trim()) return <div key={i} className="h-3" />
+        if (line.startsWith('* ') || line.startsWith('- '))
+          return <p key={i} className="pl-4"><MarkdownLine text={line} /></p>
+        return <p key={i}><MarkdownLine text={line} /></p>
+      })}
+    </div>
+  )
+}
+
+/* ── Approval card shown in chat when edits are proposed ── */
+function ApprovalCard({ onAccept, onReject }) {
+  return (
+    <div
+      className="mx-0 my-1 p-3 rounded-xl"
+      style={{ background: '#FFFFFF', border: '1px solid rgba(92,64,51,0.15)' }}
+    >
+      <p className="text-xs font-medium mb-2" style={{ color: '#5C4033' }}>
+        Proposed changes are shown on the letter. Review the highlighted differences.
+      </p>
+      <div className="flex gap-2">
+        <button
+          onClick={onAccept}
+          className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-80"
+          style={{ background: '#5C4033', color: '#FFFFFF' }}
+        >
+          Accept Changes
+        </button>
+        <button
+          onClick={onReject}
+          className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70"
+          style={{ background: '#FFFFFF', color: '#7C6553', border: '1px solid rgba(92,64,51,0.20)' }}
+        >
+          Reject
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
 export default function AppealResultPage({ onBack, formData }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -190,36 +269,72 @@ export default function AppealResultPage({ onBack, formData }) {
   const [selectionPopup, setSelectionPopup] = useState(null)
   const [askContext, setAskContext] = useState(null)
   const [docsExpanded, setDocsExpanded] = useState(false)
+  const [pipelineData, setPipelineData] = useState(null)
+  const [letterText, setLetterText] = useState('')
+  const [pendingEdit, setPendingEdit] = useState(null)
   const bottomRef = useRef(null)
   const documentRef = useRef(null)
   const inputRef = useRef(null)
 
+  // ── Initial load: call backend pipeline ──
   useEffect(() => {
-    async function loadSummary() {
-      let summary = PLACEHOLDER_SUMMARY
-      if (INITIAL_SUMMARY_API) {
-        try {
-          const res = await fetch(INITIAL_SUMMARY_API, {
+    async function loadAppeal() {
+      try {
+        let res
+        if (formData?.source === 'upload' && formData.files?.length > 0) {
+          const fd = new FormData()
+          fd.append('file', formData.files[0])
+          res = await fetch('/api/appeal/upload', { method: 'POST', body: fd })
+        } else if (formData?.source === 'manual') {
+          res = await fetch('/api/appeal/manual', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ formData }),
+            body: JSON.stringify({
+              denial_codes: formData.fields?.['Denial Code(s)'] || '',
+              cpt_codes: formData.fields?.['Procedure / CPT Code'] || '',
+              icd10_codes: formData.fields?.['Diagnosis / ICD-10 Code'] || '',
+              date_of_service: formData.fields?.['Date of Service'] || '',
+              plan_info: formData.fields?.['Insurance Plan & Group Number'] || '',
+              member_id: formData.fields?.['Member ID'] || '',
+              denial_reason: formData.denialReason || '',
+              plan_details: formData.planDetails || '',
+            }),
           })
-          const data = await res.json()
-          summary = data.summary ?? PLACEHOLDER_SUMMARY
-        } catch (err) {
-          console.error('Failed to fetch summary:', err)
         }
+
+        if (res && res.ok) {
+          const data = await res.json()
+          setPipelineData(data)
+          setLetterText(data.appeal_letter.letter_text)
+          const ext = data.extraction
+          const codes = ext.denied_cpt_codes?.join(', ') || 'unknown'
+          const carc = ext.carc_code || 'unknown'
+          const dtype = ext.denial_type?.replace(/_/g, ' ') || 'unknown'
+          const deadline = ext.appeal_deadline || 'check your denial letter'
+          const summary =
+            `Your appeal disputes the denial of **${codes}** under code **${carc}**.\n\n` +
+            `Denial type: **${dtype}**. Appeal deadline: **${deadline}**.\n\n` +
+            `What would you like to change or strengthen?`
+          setMessages([{ role: 'assistant', content: summary }])
+        } else {
+          const errText = res ? await res.text() : 'No response'
+          console.error('Pipeline error:', errText)
+          setMessages([{ role: 'assistant', content: 'There was an error processing your document. Please try again.' }])
+        }
+      } catch (err) {
+        console.error('Failed to load appeal:', err)
+        setMessages([{ role: 'assistant', content: 'Failed to connect to the server. Make sure the backend is running.' }])
       }
-      setMessages([{ role: 'assistant', content: summary }])
       setIsLoading(false)
     }
-    loadSummary()
-  }, [])
+    loadAppeal()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading, isSending])
 
+  // ── Text selection handling ──
   useEffect(() => {
     const handleMouseUp = () => {
       setTimeout(() => {
@@ -282,15 +397,16 @@ export default function AppealResultPage({ onBack, formData }) {
   const handleAskAbout = useCallback(() => {
     if (!selectionPopup?.text) return
     const text = selectionPopup.text
-    const truncated = text.length > 70 ? text.slice(0, 70) + '…' : text
+    const truncated = text.length > 70 ? text.slice(0, 70) + '\u2026' : text
     setAskContext({ text, truncated })
     setSelectionPopup(null)
     window.getSelection()?.removeAllRanges()
     setTimeout(() => inputRef.current?.focus(), 80)
   }, [selectionPopup])
 
+  // ── Chat send with intent-aware handling ──
   const handleSend = async () => {
-    if (isSending) return
+    if (isSending || !pipelineData) return
     const text = input.trim()
     if (!text && !askContext) return
 
@@ -303,38 +419,57 @@ export default function AppealResultPage({ onBack, formData }) {
     setAskContext(null)
 
     const userMessage = { role: 'user', content: messageContent }
-    const nextMessages = [...messages, userMessage]
-    setMessages(nextMessages)
+    setMessages((prev) => [...prev, userMessage])
     setIsSending(true)
 
-    if (CHAT_API_ENDPOINT) {
-      try {
-        const res = await fetch(CHAT_API_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: nextMessages }),
+    try {
+      const res = await fetch('/api/appeal/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_message: messageContent,
+          extraction: pipelineData.extraction,
+          lookup: pipelineData.lookup,
+          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+          additional_context: pipelineData.additional_context || '',
+        }),
+      })
+      const data = await res.json()
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: data.assistant_message }])
+
+      // If edit proposed, show diff for approval
+      if ((data.intent === 'edit' || data.intent === 'both') && data.proposed_letter) {
+        setPendingEdit({
+          proposedLetter: data.proposed_letter,
+          proposedExtraction: data.proposed_extraction,
+          additionalContext: data.additional_context,
         })
-        const data = await res.json()
-        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }])
-      } catch (err) {
-        console.error('Chat API error:', err)
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
-        ])
       }
-    } else {
-      await new Promise((r) => setTimeout(r, 900))
+    } catch (err) {
+      console.error('Chat API error:', err)
       setMessages((prev) => [
         ...prev,
-        {
-          role: 'assistant',
-          content:
-            "(Chat API not yet configured.) Once connected, I'll answer questions about your appeal and help strengthen your argument.",
-        },
+        { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
       ])
     }
     setIsSending(false)
+  }
+
+  const handleAcceptEdit = () => {
+    if (!pendingEdit) return
+    setLetterText(pendingEdit.proposedLetter.letter_text)
+    setPipelineData((prev) => ({
+      ...prev,
+      extraction: pendingEdit.proposedExtraction || prev.extraction,
+      appeal_letter: pendingEdit.proposedLetter,
+      additional_context: pendingEdit.additionalContext,
+    }))
+    setPendingEdit(null)
+  }
+
+  const handleRejectEdit = () => {
+    setPendingEdit(null)
   }
 
   const handleKeyDown = (e) => {
@@ -345,8 +480,7 @@ export default function AppealResultPage({ onBack, formData }) {
   }
 
   const handleDownload = useCallback(() => {
-    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    const content = `APPEAL LETTER — DRAFT\nGenerated ${date}\n\nJane Smith\n123 Main Street, Springfield, IL 62701\nMember ID: XYZ123456789\n\nBlueCross BlueShield\nAppeals Department\nPO Box 99999, Chicago, IL 60601\n\nRe: Appeal of Claim Denial — CPT 27447 / DOS: November 15, 2024\n\nDear Appeals Department,\n\nI am writing to formally appeal the denial of my claim for a Total Knee Replacement (CPT 27447), performed on November 15, 2024 by Dr. John Smith at Springfield General Hospital. The claim was denied under code CO-50 ("not medically necessary"), a determination I respectfully dispute.\n\nBASIS FOR APPEAL\n\nMy physician, Dr. John Smith (NPI: 1234567890), submitted a prior authorization on October 1, 2024 (Auth #PA-9988), which your plan approved. The procedure addresses a diagnosis of primary osteoarthritis of the right knee (ICD-10: M17.11), documented through clinical imaging and functional assessments conducted over the past 18 months.\n\nPer my plan's Summary Plan Description (Group #12345, Section 5.2), medically necessary orthopedic surgical procedures are covered benefits. I have exhausted all conservative treatment options including physical therapy, corticosteroid injections, and oral NSAIDs without adequate relief.\n\nI respectfully request that you overturn the denial and process my claim for reimbursement under my plan benefits. If additional information is required, please contact me at (555) 123-4567 or jane.smith@email.com.\n\nSincerely,\nJane Smith\n\n---\nSUPPORTING DOCUMENTATION\n1. Prior Authorization #PA-9988 (approved Oct 1, 2024)\n2. Physician letter of medical necessity from Dr. Smith\n3. MRI report dated September 3, 2024\n4. AAOS Clinical Practice Guidelines on Knee OA Management\n5. Explanation of Benefits (EOB) dated December 2, 2024`
+    const content = letterText || 'No letter generated yet.'
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -356,9 +490,11 @@ export default function AppealResultPage({ onBack, formData }) {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  }, [])
+  }, [letterText])
 
-  const canSend = (input.trim() || askContext) && !isSending
+  const canSend = (input.trim() || askContext) && !isSending && pipelineData
+
+  const requiredEvidence = pipelineData?.lookup?.required_evidence ?? []
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 48px)', background: '#FAF8F4' }}>
@@ -381,98 +517,49 @@ export default function AppealResultPage({ onBack, formData }) {
           </button>
         </div>
 
-        {APPEAL_PDF_URL ? (
-          <iframe
-            src={APPEAL_PDF_URL}
-            title="Appeal Letter"
-            className="w-full rounded-xl"
-            style={{ minHeight: 800, border: 'none' }}
-          />
-        ) : (
-          <div
-            ref={documentRef}
-            className="max-w-[640px] mx-auto rounded-xl shadow-sm overflow-hidden select-text relative"
-            style={{ background: '#FFFFFF', border: '1px solid rgba(92,64,51,0.10)' }}
-          >
-            {/* Letter header */}
-            <div className="px-10 py-6 relative" style={{ borderBottom: '1px solid #F5EDE6' }}>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#C9B99A' }}>
-                Appeal Letter — Draft
-              </p>
-              <p className="text-xs" style={{ color: '#C9B99A' }}>
-                Generated {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
+        <div
+          ref={documentRef}
+          className="max-w-[640px] mx-auto rounded-xl shadow-sm overflow-hidden select-text relative"
+          style={{ background: '#FFFFFF', border: '1px solid rgba(92,64,51,0.10)' }}
+        >
+          {/* Letter header */}
+          <div className="px-10 py-6 relative" style={{ borderBottom: '1px solid #F5EDE6' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#C9B99A' }}>
+              Appeal Letter — Draft
+            </p>
+            <p className="text-xs" style={{ color: '#C9B99A' }}>
+              Generated {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
 
-              <button
-                type="button"
-                onClick={handleDownload}
-                className="absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70"
-                style={{
-                  background: '#FFFFFF',
-                  color: '#7C6553',
-                  border: '1px solid rgba(92,64,51,0.14)',
-                }}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={!letterText}
+              className="absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:opacity-30"
+              style={{
+                background: '#FFFFFF',
+                color: '#7C6553',
+                border: '1px solid rgba(92,64,51,0.14)',
+              }}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </button>
+          </div>
 
-            {/* Letter body */}
-            <div className="px-10 py-8 text-sm leading-relaxed space-y-5" style={{ color: '#7C6553' }}>
-              <div className="space-y-0.5">
-                <p style={{ color: '#5C4033', fontWeight: 600 }}>Jane Smith</p>
-                <p>123 Main Street, Springfield, IL 62701</p>
-                <p>Member ID: XYZ123456789</p>
-              </div>
+          {/* Letter body — dynamic from backend or diff view */}
+          {pendingEdit ? (
+            <DiffView oldText={letterText} newText={pendingEdit.proposedLetter.letter_text} />
+          ) : (
+            <LetterView text={letterText} />
+          )}
 
-              <div className="space-y-0.5">
-                <p style={{ color: '#5C4033', fontWeight: 600 }}>BlueCross BlueShield</p>
-                <p>Appeals Department</p>
-                <p>PO Box 99999, Chicago, IL 60601</p>
-              </div>
-
-              <p style={{ color: '#A08060' }}>
-                Re: Appeal of Claim Denial — CPT 27447 / DOS: November 15, 2024
-              </p>
-
-              <p>Dear Appeals Department,</p>
-
-              <p>
-                I am writing to formally appeal the denial of my claim for a Total Knee Replacement
-                (CPT 27447), performed on November 15, 2024 by Dr. John Smith at Springfield General
-                Hospital. The claim was denied under code{' '}
-                <span style={{ color: '#7C6553', fontWeight: 600 }}>CO-50</span>{' '}
-                ("not medically necessary"), a determination I respectfully dispute.
-              </p>
-
-              <div>
-                <p style={{ color: '#5C4033', fontWeight: 600 }} className="mb-2">Basis for Appeal</p>
-                <p>
-                  My physician, Dr. John Smith (NPI: 1234567890), submitted a prior authorization on
-                  October 1, 2024 (Auth #PA-9988), which your plan approved. The procedure addresses a
-                  diagnosis of primary osteoarthritis of the right knee (ICD-10: M17.11), documented
-                  through clinical imaging and functional assessments conducted over the past 18 months.
-                </p>
-              </div>
-
-              <p>
-                Per my plan's Summary Plan Description (Group #12345, Section 5.2), medically necessary
-                orthopedic surgical procedures are covered benefits. I have exhausted all conservative
-                treatment options including physical therapy, corticosteroid injections, and oral
-                NSAIDs without adequate relief.
-              </p>
-
-              <p>
-                I respectfully request that you overturn the denial and process my claim for reimbursement
-                under my plan benefits. If additional information is required, please contact me at
-                (555) 123-4567 or jane.smith@email.com.
-              </p>
-
-              {/* Supporting documents */}
+          {/* Supporting documents */}
+          {requiredEvidence.length > 0 && (
+            <div className="px-10 pb-8">
               <div style={{ borderTop: '1px solid #F0E8E0', paddingTop: 16 }}>
                 <button
                   type="button"
@@ -487,26 +574,19 @@ export default function AppealResultPage({ onBack, formData }) {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  Supporting Documentation ({docsExpanded ? 'collapse' : '5 items'})
+                  Supporting Documentation ({docsExpanded ? 'collapse' : `${requiredEvidence.length} items`})
                 </button>
                 {docsExpanded && (
                   <ul className="mt-3 space-y-1.5 pl-5" style={{ color: '#A08060', fontSize: 13 }}>
-                    <li>• Prior Authorization #PA-9988 (approved Oct 1, 2024)</li>
-                    <li>• Physician letter of medical necessity from Dr. Smith</li>
-                    <li>• MRI report dated September 3, 2024</li>
-                    <li>• AAOS Clinical Practice Guidelines on Knee OA Management</li>
-                    <li>• Explanation of Benefits (EOB) dated December 2, 2024</li>
+                    {requiredEvidence.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
                   </ul>
                 )}
               </div>
-
-              <div style={{ paddingTop: 8 }}>
-                <p>Sincerely,</p>
-                <p style={{ color: '#5C4033', fontWeight: 600, marginTop: 4 }}>Jane Smith</p>
-              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Right: Chat assistant — sticky, stays pinned while letter scrolls ── */}
@@ -528,7 +608,12 @@ export default function AppealResultPage({ onBack, formData }) {
           {isLoading ? (
             <TypingIndicator />
           ) : (
-            messages.map((msg, i) => <ChatMessage key={i} message={msg} />)
+            <>
+              {messages.map((msg, i) => <ChatMessage key={i} message={msg} />)}
+              {pendingEdit && (
+                <ApprovalCard onAccept={handleAcceptEdit} onReject={handleRejectEdit} />
+              )}
+            </>
           )}
           {isSending && <TypingIndicator />}
           <div ref={bottomRef} />
@@ -574,7 +659,7 @@ export default function AppealResultPage({ onBack, formData }) {
                 boxShadow: '0 1px 4px rgba(92,64,51,0.06)',
               }}
               rows={1}
-              placeholder={askContext ? 'Ask about the selected passage…' : 'Ask about your appeal…'}
+              placeholder={askContext ? 'Ask about the selected passage\u2026' : 'Ask about your appeal\u2026'}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
