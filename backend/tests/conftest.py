@@ -273,13 +273,14 @@ def mock_gemini_generation():
 def mock_gemini_chat():
     """Patch Gemini client for chat service."""
     mock_client = MagicMock()
-    # Field update detection returns empty (no field changes)
-    # Summary returns a simple message
-    mock_client.models.generate_content.side_effect = [
-        _make_mock_gemini_response("{}"),  # field updates
-        _make_mock_gemini_response(SAMPLE_APPEAL_LETTER),  # regenerated letter
-        _make_mock_gemini_response("Letter regenerated with your changes."),  # summary
-    ]
+    # Intent classification returns question intent
+    intent_response = json.dumps({
+        "intent": "question",
+        "answer": "CO-50 means the service was deemed not medically necessary by the payer.",
+        "field_updates": {},
+        "edit_description": None,
+    })
+    mock_client.models.generate_content.return_value = _make_mock_gemini_response(intent_response)
     with patch("app.services.chat._get_client", return_value=mock_client):
         yield mock_client
 

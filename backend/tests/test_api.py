@@ -118,9 +118,8 @@ class TestChatEndpoint:
         response = client.post("/api/appeal/chat", json=request_body)
         assert response.status_code == 200
         data = response.json()
-        assert "appeal_letter" in data
+        assert "intent" in data
         assert "assistant_message" in data
-        assert "extraction" in data
         assert "conversation_history" in data
 
 
