@@ -55,8 +55,14 @@ class RegulatoryLookupResult(BaseModel):
     escalation: str | None = None
 
 
+class LetterSection(BaseModel):
+    type: str  # sender, date, recipient, subject, greeting, body, evidence_header, evidence_item, closing, signature, disclaimer
+    text: str
+
+
 class AppealLetterResponse(BaseModel):
-    letter_text: str
+    letter_sections: list[LetterSection] = Field(default_factory=list)
+    letter_text: str = ""  # plain-text export
     citations_used: list[str] = Field(default_factory=list)
     confidence_note: str | None = None
     denial_type: str | None = None
@@ -93,7 +99,7 @@ class GenerateRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     user_message: str
-    current_letter_text: str = ""
+    current_letter_sections: list[LetterSection] = Field(default_factory=list)
     extraction: DenialExtractionResult
     lookup: RegulatoryLookupResult
     conversation_history: list[ChatMessage] = Field(default_factory=list)
