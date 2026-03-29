@@ -11,8 +11,9 @@ from app.models.schemas import (
     ChatRequest,
     ChatResponse,
     DenialExtractionResult,
+    LetterSection,
 )
-from app.services.generation import generate_appeal_letter
+from app.services.generation import generate_appeal_letter, _sections_to_text
 from app.services.lookup import perform_full_lookup
 
 logger = logging.getLogger(__name__)
@@ -46,40 +47,43 @@ Applicable regulations: {regulations}
 User message: {user_message}
 
 Classify the intent as EXACTLY one of:
-- "question" — the user is asking for information or explanation (e.g. "what does this regulation mean?", "why was my claim denied?")
-- "edit" — the user wants to change the letter (e.g. "make it more assertive", "change my name", "add a paragraph about the emergency")
-- "both" — the user asks a question AND wants a change (e.g. "can you explain that citation and remove it?")
+- "question" — the user is asking for information or explanation
+- "edit" — the user wants to change the letter
+- "both" — the user asks a question AND wants a change
 
 Return a JSON object with these fields:
 - intent: "question", "edit", or "both"
-- answer: if intent is "question" or "both", provide a helpful answer to their question using the appeal context and regulations. If intent is "edit", set to null.
-- field_updates: if intent is "edit" or "both", a JSON object of extraction fields to update (e.g. {{"patient_name": "John Smith"}}). Only include fields that need changing. If intent is "question", set to {{}}.
-- edit_description: if intent is "edit" or "both", a brief description of what letter changes were requested. If intent is "question", set to null.
+- answer: if intent is "question" or "both", provide a helpful answer. If intent is "edit", set to null.
+- field_updates: if intent is "edit" or "both", a JSON object of extraction fields to update. If "question", set to {{}}.
+- edit_description: if intent is "edit" or "both", a brief description of what changes were requested. If "question", set to null.
 
 Return ONLY valid JSON."""
 
-TARGETED_EDIT_PROMPT = """You are editing an existing insurance appeal letter. Make ONLY the specific changes the user requested. Keep everything else EXACTLY the same — same citations, same structure, same formatting, same wording for unchanged sections.
+TARGETED_EDIT_PROMPT = """You are editing an existing insurance appeal letter. The letter is stored as a JSON array of sections.
 
-CURRENT LETTER:
-{current_letter_text}
+CURRENT LETTER SECTIONS:
+{current_sections_json}
 
 USER REQUEST:
 {user_message}
 
 RULES:
-1. Only modify the parts of the letter that directly relate to the user's request.
-2. Do NOT add, remove, or modify any regulatory citations unless explicitly asked.
-3. Do NOT rewrite paragraphs that weren't mentioned — copy them exactly as-is.
-4. Keep the same overall structure and formatting.
-5. Preserve the DISCLAIMER at the end exactly as-is.
+1. Only modify sections that directly relate to the user's request.
+2. Unchanged sections MUST be returned with their text EXACTLY as-is — do not rephrase, reword, or restructure them.
+3. Do NOT add, remove, or modify any regulatory citations unless explicitly asked.
+4. You may add or remove sections if the user explicitly asks.
+5. Do not modify the "disclaimer" section.
 
-Return the complete letter with your changes applied. Return ONLY the letter text."""
+Return a JSON object with TWO fields:
+- "sections": the complete array of sections with edits applied (unchanged sections copied exactly)
+- "changes_summary": a brief explanation of what you changed and why (1-2 sentences)
+
+Return ONLY valid JSON."""
 
 
 async def process_chat_message(request: ChatRequest) -> ChatResponse:
     """Process a chat message with intent classification."""
 
-    # Step 1: Classify intent
     intent_result = await _classify_intent(request)
 
     intent = intent_result.get("intent", "question")
@@ -87,7 +91,6 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
     field_updates = intent_result.get("field_updates", {})
     edit_description = intent_result.get("edit_description")
 
-    # Build updated conversation history
     updated_history = list(request.conversation_history)
     updated_history.append(ChatMessage(role="user", content=request.user_message))
 
@@ -117,18 +120,19 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
         proposed_letter = await generate_appeal_letter(
             updated_extraction, lookup, additional_context=accumulated_context
         )
+        changes_summary = f"Regenerated the letter with updated denial type: {field_updates['denial_type']}."
     else:
-        # Targeted edit — modify current letter text directly
-        proposed_letter = await _targeted_edit(
-            request.current_letter_text, request.user_message, field_updates
+        # Targeted edit on JSON sections
+        proposed_letter, changes_summary = await _targeted_edit_sections(
+            request.current_letter_sections, request.user_message, field_updates
         )
         accumulated_context = request.additional_context
 
     # Build assistant message
     if intent == "both" and answer:
-        assistant_message = f"{answer}\n\nI've also proposed changes to your letter."
+        assistant_message = f"{answer}\n\n{changes_summary}"
     else:
-        assistant_message = f"I've proposed changes to your letter: {edit_description or 'adjustments based on your request'}."
+        assistant_message = changes_summary
 
     updated_history.append(ChatMessage(role="assistant", content=assistant_message))
 
@@ -142,18 +146,22 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
     )
 
 
-async def _targeted_edit(
-    current_letter_text: str, user_message: str, field_updates: dict
-) -> AppealLetterResponse:
-    """Make targeted edits to the current letter without full pipeline regen."""
-    # If we have field updates (e.g. name change), include them in the prompt
+async def _targeted_edit_sections(
+    current_sections: list[LetterSection], user_message: str, field_updates: dict
+) -> tuple[AppealLetterResponse, str]:
+    """Make targeted edits to letter sections. Returns (proposed_letter, changes_summary)."""
+    sections_json = json.dumps(
+        [{"type": s.type, "text": s.text} for s in current_sections],
+        indent=2,
+    )
+
     edit_instructions = user_message
     if field_updates:
         updates_str = ", ".join(f"{k}: {v}" for k, v in field_updates.items())
         edit_instructions = f"{user_message}\n\nAlso update these fields in the letter: {updates_str}"
 
     prompt = TARGETED_EDIT_PROMPT.format(
-        current_letter_text=current_letter_text,
+        current_sections_json=sections_json,
         user_message=edit_instructions,
     )
 
@@ -161,19 +169,36 @@ async def _targeted_edit(
         response = _get_client().models.generate_content(
             model=MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.2),
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.2,
+            ),
         )
-        edited_text = response.text.strip()
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        result = json.loads(text)
     except Exception as e:
-        logger.error(f"Targeted edit failed: {e}")
+        logger.error(f"Targeted section edit failed: {e}")
         raise RuntimeError(f"Letter edit failed: {e}") from e
 
+    raw_sections = result.get("sections", [])
+    changes_summary = result.get("changes_summary", "Changes applied to your letter.")
+
+    sections = []
+    for item in raw_sections:
+        if isinstance(item, dict) and "type" in item and "text" in item:
+            sections.append(LetterSection(type=item["type"], text=item["text"]))
+
+    letter_text = _sections_to_text(sections)
+
     return AppealLetterResponse(
-        letter_text=edited_text,
+        letter_sections=sections,
+        letter_text=letter_text,
         citations_used=[],
         confidence_note=None,
         denial_type=None,
-    )
+    ), changes_summary
 
 
 async def _classify_intent(request: ChatRequest) -> dict:
