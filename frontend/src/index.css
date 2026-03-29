@@ -90,3 +90,30 @@
     --tw-ring-color: rgba(160, 128, 96, 0.20);
   }
 }
+
+/* ── Print styles: only show the letter content ── */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  [data-print-area],
+  [data-print-area] * {
+    visibility: visible !important;
+  }
+  [data-print-area] {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 24px !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  /* Hide the letter header chrome (draft label, buttons) when printing */
+  [data-print-area] > div:first-child {
+    display: none !important;
+  }
+}

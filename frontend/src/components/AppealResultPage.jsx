@@ -158,9 +158,26 @@ export default function AppealResultPage({ onBack, formData }) {
   const [letterText, setLetterText] = useState('')
   const [editMode, setEditMode] = useState(false)
   const [pendingEdit, setPendingEdit] = useState(null)
+  const [loadingStage, setLoadingStage] = useState(0)
   const bottomRef = useRef(null)
   const documentRef = useRef(null)
   const inputRef = useRef(null)
+
+  const LOADING_STAGES = [
+    'Extracting text from your document...',
+    'Identifying denial codes and claim details...',
+    'Looking up applicable regulations...',
+    'Generating your appeal letter...',
+  ]
+
+  // Cycle loading stage text
+  useEffect(() => {
+    if (!isLoading) return
+    const interval = setInterval(() => {
+      setLoadingStage((prev) => (prev + 1) % LOADING_STAGES.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [isLoading])
 
   // ── Initial load ──
   useEffect(() => {
@@ -334,11 +351,8 @@ export default function AppealResultPage({ onBack, formData }) {
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }
 
   const handleDownload = useCallback(() => {
-    const blob = new Blob([letterText || 'No letter generated yet.'], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = 'Appeal_Letter.txt'
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
-  }, [letterText])
+    window.print()
+  }, [])
 
   const canSend = (input.trim() || askContext) && !isSending && pipelineData
   const requiredEvidence = pipelineData?.lookup?.required_evidence ?? []
@@ -357,7 +371,7 @@ export default function AppealResultPage({ onBack, formData }) {
           </button>
         </div>
 
-        <div ref={documentRef} className="max-w-[640px] mx-auto rounded-xl shadow-sm overflow-hidden select-text relative" style={{ background: '#FFFFFF', border: '1px solid rgba(92,64,51,0.10)' }}>
+        <div ref={documentRef} data-print-area className="max-w-[640px] mx-auto rounded-xl shadow-sm overflow-hidden select-text relative" style={{ background: '#FFFFFF', border: '1px solid rgba(92,64,51,0.10)' }}>
           {/* Letter header with toggle + download */}
           <div className="px-10 py-6 relative" style={{ borderBottom: '1px solid #F5EDE6' }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#C9B99A' }}>Appeal Letter — Draft</p>
@@ -387,12 +401,12 @@ export default function AppealResultPage({ onBack, formData }) {
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                Download
+                Download PDF
               </button>
             </div>
           </div>
 
-          {/* Letter body */}
+          {/* Letter body (print area) */}
           {pendingEdit ? (
             <DiffView oldText={letterText} newText={pendingEdit.proposedText} />
           ) : editMode ? (
@@ -414,7 +428,7 @@ export default function AppealResultPage({ onBack, formData }) {
                 <div className="flex items-center gap-1.5">
                   {[0, 150, 300].map((d) => <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#C9B99A', animationDelay: `${d}ms` }} />)}
                 </div>
-                <p className="text-sm" style={{ color: '#A08060' }}>Analyzing your document and generating appeal...</p>
+                <p className="text-sm transition-opacity" style={{ color: '#A08060' }}>{LOADING_STAGES[loadingStage]}</p>
               </div>
             </div>
           )}
