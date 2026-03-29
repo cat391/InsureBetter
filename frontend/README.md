@@ -1,87 +1,102 @@
-# InsureBetter — Frontend
+# Frontend — React + Vite + Tailwind
 
-React + Vite frontend for InsureBetter, a tool that helps users build evidence-based healthcare claim denial appeals.
+The frontend provides a four-page flow: landing → upload/manual entry → appeal result with AI chat.
 
-## Tech Stack
-
-- **React 18** with functional components and hooks
-- **Vite** for dev server and bundling
-- **Tailwind CSS** for utility styling
-- **Playfair Display** (Google Fonts) for brand typography
-
-## Pages & Features
-
-### Landing Page
-- Choose between two paths: **Upload Documents** or **Manual Entry**
-- Radio-button style option cards with hover/selected states
-- Continue button unlocks only after a selection is made
-
-### Upload Documents Page
-- **Drag-and-drop** file upload zone for EOB and denial letters
-- Accepts PDF, PNG, JPG, and TIFF files (up to 25 MB each)
-- Duplicate file detection — adding the same filename twice is a no-op
-- Removable file chips show file type badge and truncated name
-- Optional **Additional Claim Context** textarea for notes not captured in documents
-- Generate Appeal button is gated behind at least one uploaded file
-
-### Manual Entry Page
-- Structured form for entering claim details: denial codes, CPT/procedure codes, ICD-10 diagnosis codes, date of service, insurance plan, and member ID
-- **Reason for Denial** textarea for free-text insurer language
-- **Plan & Policy Information** textarea for coverage details, prior authorizations, and physician notes
-- Generate Appeal unlocks when either the plan details or denial reason field has content
-
-### Appeal Result Page
-Split-panel layout:
-
-**Left panel — Appeal Letter**
-- Formatted draft appeal letter with sender/recipient blocks, denial reference, and basis for appeal
-- Expandable **Supporting Documentation** section (5 items, collapsible)
-- **Download** button exports the letter as a `.txt` file
-- **Text selection toolbar** — highlight selected text in yellow, sage, or rose, or click "Ask about this" to send the passage as context to the chat assistant
-
-**Right panel — AI Chat Assistant** (sticky, stays visible while letter scrolls)
-- Loads an initial appeal summary on mount (connects to `INITIAL_SUMMARY_API` when configured, falls back to a placeholder)
-- Inline **typing indicator** (three bouncing dots) while responses load
-- **Suggested prompts** shown after the first assistant message ("How strong is my appeal?", "What documents should I attach?", "Strengthen the medical necessity section")
-- **Context chip** shows truncated selected passage when "Ask about this" is triggered; dismissible
-- Textarea input with Enter-to-send and Shift+Enter for newline
-- Connects to `CHAT_API_ENDPOINT` when configured; stubs a placeholder response until then
-
-### Navigation Bar (persistent)
-- Fixed top bar (48 px) with the InsureBetter logo and wordmark
-- **Breadcrumb trail**: Get Started › Enter Info › Your Appeal — active step highlighted, current step bolded
-- Inline disclaimer: "Not legal advice — consult a healthcare advocate for complex disputes"
-
-### Page Transitions
-- Smooth fade + slide-up animation (300 ms cubic-bezier) between all pages via a shared `PageTransition` wrapper
-
-## Project Structure
-
-```
-src/
-├── App.jsx                        # Root layout, routing state, nav bar, page transitions
-└── components/
-    ├── LandingPage.jsx            # Entry point — choose upload or manual path
-    ├── UploadDocumentsPage.jsx    # Drag-and-drop document upload
-    ├── ManualEntryPage.jsx        # Structured manual claim entry form
-    └── AppealResultPage.jsx       # Generated appeal letter + AI chat assistant
-```
-
-## Getting Started
+## Setup
 
 ```bash
 npm install
-npm run dev
+npm run dev    # http://localhost:5173
 ```
 
-The dev server starts at `http://localhost:5173` by default.
+The Vite dev server proxies `/api` requests to `http://localhost:8000` (the backend).
 
-## API Integration Points
+## Tech Stack
 
-The appeal result page has three stub constants at the top of `AppealResultPage.jsx` that can be pointed at a backend:
+- **React 18** — functional components, hooks only (no class components, no Redux)
+- **Vite 5** — dev server + production bundler
+- **Tailwind CSS 3.4** — utility-first styling
+- **react-markdown** + **remark-breaks** — renders appeal letter markdown with proper formatting
+- **diff** (npm) — line-by-line diffing for chat edit proposals
+- **Google Fonts** — Playfair Display (headings) + Inter (body)
 
-| Constant | Purpose |
-|---|---|
-| `INITIAL_SUMMARY_API` | `POST` endpoint — receives `formData`, returns `{ summary: string }` |
-| `CHAT_API_ENDPOINT` | `POST` endpoint — receives `{ messages }`, returns `{ reply: string }` |
-| `APPEAL_PDF_URL` | If set, renders the letter as an `<iframe>` instead of the built-in HTML view |
+## File Structure
+
+```
+frontend/
+├── index.html                         # HTML entry point
+├── package.json                       # Dependencies and scripts
+├── vite.config.js                     # Vite config + API proxy to backend
+├── tailwind.config.js                 # Tailwind theme (Playfair Display font)
+├── postcss.config.js                  # PostCSS + Tailwind + Autoprefixer
+├── public/
+│   └── logo.png                       # InsureBetter logo
+└── src/
+    ├── index.jsx                      # React DOM render entry point
+    ├── index.css                      # Tailwind layers + custom component styles
+    ├── App.jsx                        # Root component: routing, nav bar, page transitions
+    └── components/
+        ├── LandingPage.jsx            # Choose upload or manual entry path
+        ├── UploadDocumentsPage.jsx    # Drag-and-drop file upload + context
+        ├── ManualEntryPage.jsx        # Form-based denial details entry
+        └── AppealResultPage.jsx       # Appeal letter + AI chat (main integration file)
+```
+
+## Pages
+
+### LandingPage
+Entry point with two radio-button cards: "Upload Documents" or "Manual Entry". Continue button gated behind selection.
+
+### UploadDocumentsPage
+Drag-and-drop upload zone accepting PDF, PNG, JPG, TIFF (up to 25MB). Duplicate detection, removable file chips. Optional "Additional Claim Context" textarea. On submit, sends files to `POST /api/appeal/upload` as multipart FormData.
+
+### ManualEntryPage
+Six structured fields (denial codes, CPT, ICD-10, date of service, plan info, member ID) plus denial reason and plan details textareas. On submit, sends to `POST /api/appeal/manual` as JSON.
+
+### AppealResultPage
+This is the core integration file (~500 lines). Split-panel layout:
+
+**Left panel — Appeal Letter:**
+- **Read mode** (default): Rendered markdown via `ReactMarkdown` with `remark-breaks`. Full text selection + highlighting works across paragraphs.
+- **Edit mode** (toggle button): Raw markdown textarea for direct editing (address, phone, typos).
+- **Diff view**: When chat proposes edits, shows line-by-line diff (red = removed, green = added) with Accept/Reject buttons.
+- Supporting documentation section from `lookup.required_evidence`.
+- Download button exports letter as `.txt`.
+
+**Right panel — AI Chat:**
+- Initial summary built from extraction data (denial codes, type, deadline).
+- Suggested quick prompts after first message.
+- Text selection toolbar: highlight in yellow/sage/rose, or "Ask about this" to send passage as chat context.
+- Sends to `POST /api/appeal/chat` with `current_letter_text`, `extraction`, `lookup`, and conversation history.
+- Intent-aware responses: questions answered inline, edits shown as diffs for approval.
+
+## How the Frontend Calls the Backend
+
+| User Action | Frontend Does | Backend Endpoint |
+|-------------|--------------|-----------------|
+| Upload file + click Generate | `FormData` with file | `POST /api/appeal/upload` |
+| Fill form + click Generate | JSON with form fields | `POST /api/appeal/manual` |
+| Ask a question in chat | JSON with message + context | `POST /api/appeal/chat` |
+| Request a letter edit in chat | Same as above | `POST /api/appeal/chat` (intent=edit) |
+
+## Key Components
+
+### `MarkdownLine`
+Inline markdown parser for `**bold**` text in chat messages. Used in chat bubbles and diff view lines.
+
+### `SelectionToolbar`
+Floating toolbar rendered via `createPortal` when text is selected in read mode. Offers highlight colors and "Ask about this" button.
+
+### `ApprovalCard`
+Rendered in the chat panel when the backend proposes letter edits. Accept applies the changes, Reject discards them.
+
+## Styling
+
+Color palette (warm browns/tans):
+- Background: `#FAF8F4`
+- Primary text: `#5C4033`
+- Secondary text: `#7C6553`
+- Muted accent: `#C9B99A`
+- Borders: `#E8DDD5`
+
+Custom CSS classes in `index.css`: `.selection-card`, `.upload-zone`, `.btn-primary`, `.btn-secondary`, `.field-label`, `.textarea`, `.input-field`.
