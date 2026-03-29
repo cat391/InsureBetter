@@ -100,8 +100,20 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    appeal_letter: AppealLetterResponse
+    intent: str  # "question", "edit", or "both"
     assistant_message: str
-    extraction: DenialExtractionResult
-    additional_context: str
+    proposed_letter: AppealLetterResponse | None = None
+    proposed_extraction: DenialExtractionResult | None = None
+    additional_context: str = ""
     conversation_history: list[ChatMessage]
+
+
+class ManualEntryRequest(BaseModel):
+    denial_codes: str = ""
+    cpt_codes: str = ""
+    icd10_codes: str = ""
+    date_of_service: str = ""
+    plan_info: str = ""
+    member_id: str = ""
+    denial_reason: str = ""
+    plan_details: str = ""

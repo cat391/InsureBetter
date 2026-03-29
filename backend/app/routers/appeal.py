@@ -12,6 +12,7 @@ from app.models.schemas import (
     FullPipelineResponse,
     GenerateRequest,
     HealthResponse,
+    ManualEntryRequest,
     RegulatoryLookupResult,
 )
 from app.services.extraction import extract_denial_info
@@ -144,6 +145,70 @@ async def extract_only(file: UploadFile = File(...)):
         raise HTTPException(status_code=422, detail=str(e))
 
     return extraction
+
+
+@router.post("/manual", response_model=FullPipelineResponse)
+async def manual_entry(request: ManualEntryRequest):
+    """Generate appeal from manually entered form fields."""
+    from app.services.lookup import lookup_carc_category
+
+    start = time.perf_counter()
+
+    # Parse CARC code — strip any prefix like "CO-"
+    carc_code = request.denial_codes.split(",")[0].strip() if request.denial_codes else None
+
+    # Parse CPT codes
+    denied_cpt_codes = [c.strip() for c in request.cpt_codes.split(",") if c.strip()]
+
+    # Build extraction from form fields
+    extraction = DenialExtractionResult(
+        carc_code=carc_code,
+        denied_cpt_codes=denied_cpt_codes,
+        denial_reason=request.denial_reason,
+        date_of_service=request.date_of_service or None,
+        patient_id=request.member_id or None,
+        plan_type=request.plan_info or None,
+        raw_text=f"{request.denial_reason}\n{request.plan_details}",
+        confidence="medium",
+    )
+
+    # Use CARC lookup to classify denial_type
+    if carc_code:
+        category = lookup_carc_category(carc_code)
+        if category:
+            extraction.denial_type = category
+
+    # If no CARC match but we have a denial reason, use LLM to classify
+    if not extraction.denial_type and request.denial_reason:
+        try:
+            from app.services.extraction import extract_denial_info
+            llm_extraction = await extract_denial_info(
+                f"Denial reason: {request.denial_reason}\nPlan details: {request.plan_details}"
+            )
+            extraction.denial_type = llm_extraction.denial_type
+        except RuntimeError:
+            pass  # Proceed without classification
+
+    lookup = perform_full_lookup(extraction)
+
+    try:
+        appeal_letter = await generate_appeal_letter(extraction, lookup)
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=ErrorResponse(
+                error="Letter generation failed", detail=str(e), stage="generation"
+            ).model_dump(),
+        )
+
+    elapsed = time.perf_counter() - start
+
+    return FullPipelineResponse(
+        extraction=extraction,
+        lookup=lookup,
+        appeal_letter=appeal_letter,
+        processing_time_seconds=round(elapsed, 2),
+    )
 
 
 @router.post("/generate", response_model=FullPipelineResponse)
