@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -7,7 +9,7 @@ from app.models.schemas import (
     RegulationEntry,
     RegulatoryLookupResult,
 )
-from tests.conftest import SAMPLE_APPEAL_LETTER, SAMPLE_EXTRACTION_JSON, SAMPLE_DENIAL_TEXT
+from tests.conftest import SAMPLE_APPEAL_SECTIONS, SAMPLE_EXTRACTION_JSON, SAMPLE_DENIAL_TEXT
 
 
 def _make_mock_client(response_text: str):
@@ -24,13 +26,13 @@ class TestGenerateAppealLetter:
         from app.services.generation import generate_appeal_letter
         result = await generate_appeal_letter(sample_extraction_result, sample_lookup_result)
         assert isinstance(result, AppealLetterResponse)
-        assert len(result.letter_text) > 100
+        assert len(result.letter_sections) > 0
+        assert len(result.letter_text) > 50
 
     @pytest.mark.asyncio
     async def test_citations_extracted_from_letter(self, sample_extraction_result, sample_lookup_result, mock_gemini_generation):
         from app.services.generation import generate_appeal_letter
         result = await generate_appeal_letter(sample_extraction_result, sample_lookup_result)
-        # The sample letter includes "42 USC 300gg-19" which is in lookup
         assert "42 USC 300gg-19" in result.citations_used
 
     @pytest.mark.asyncio
@@ -53,14 +55,13 @@ class TestGenerateAppealLetter:
     @pytest.mark.asyncio
     async def test_empty_lookup_still_produces_letter(self, sample_extraction_result):
         empty_lookup = RegulatoryLookupResult()
-        mock_client = _make_mock_client(
-            "Dear Sir, I am appealing this denial. Sincerely, Patient."
-        )
+        empty_sections = [{"type": "body", "text": "I am appealing this denial."}]
+        mock_client = _make_mock_client(json.dumps(empty_sections))
         with patch("app.services.generation._get_client", return_value=mock_client):
             from app.services.generation import generate_appeal_letter
             result = await generate_appeal_letter(sample_extraction_result, empty_lookup)
             assert isinstance(result, AppealLetterResponse)
-            assert len(result.letter_text) > 0
+            assert len(result.letter_sections) > 0
             assert result.citations_used == []
 
     @pytest.mark.asyncio
