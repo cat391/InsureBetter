@@ -11,9 +11,8 @@ from app.models.schemas import (
     ChatRequest,
     ChatResponse,
     DenialExtractionResult,
-    LetterSection,
 )
-from app.services.generation import generate_appeal_letter, _sections_to_text
+from app.services.generation import generate_appeal_letter
 from app.services.lookup import perform_full_lookup
 
 logger = logging.getLogger(__name__)
@@ -59,23 +58,23 @@ Return a JSON object with these fields:
 
 Return ONLY valid JSON."""
 
-TARGETED_EDIT_PROMPT = """You are editing an existing insurance appeal letter. The letter is stored as a JSON array of sections.
+TARGETED_EDIT_PROMPT = """You are editing an existing insurance appeal letter. Make ONLY the specific changes the user requested. Keep everything else EXACTLY the same — same citations, same structure, same formatting, same wording for unchanged paragraphs.
 
-CURRENT LETTER SECTIONS:
-{current_sections_json}
+CURRENT LETTER:
+{current_letter_text}
 
 USER REQUEST:
 {user_message}
 
 RULES:
-1. Only modify sections that directly relate to the user's request.
-2. Unchanged sections MUST be returned with their text EXACTLY as-is — do not rephrase, reword, or restructure them.
-3. Do NOT add, remove, or modify any regulatory citations unless explicitly asked.
-4. You may add or remove sections if the user explicitly asks.
-5. Do not modify the "disclaimer" section.
+1. Only modify the parts of the letter that directly relate to the user's request.
+2. Do NOT add, remove, or modify any regulatory citations unless explicitly asked.
+3. Do NOT rewrite paragraphs that weren't mentioned — copy them character-for-character.
+4. Keep the same markdown formatting (bold, bullets, etc.).
+5. Preserve the DISCLAIMER at the end exactly as-is.
 
 Return a JSON object with TWO fields:
-- "sections": the complete array of sections with edits applied (unchanged sections copied exactly)
+- "letter_text": the complete letter with your changes applied (unchanged parts copied exactly)
 - "changes_summary": a brief explanation of what you changed and why (1-2 sentences)
 
 Return ONLY valid JSON."""
@@ -122,9 +121,9 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
         )
         changes_summary = f"Regenerated the letter with updated denial type: {field_updates['denial_type']}."
     else:
-        # Targeted edit on JSON sections
-        proposed_letter, changes_summary = await _targeted_edit_sections(
-            request.current_letter_sections, request.user_message, field_updates
+        # Targeted edit on markdown text
+        proposed_letter, changes_summary = await _targeted_edit(
+            request.current_letter_text, request.user_message, field_updates
         )
         accumulated_context = request.additional_context
 
@@ -146,22 +145,17 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
     )
 
 
-async def _targeted_edit_sections(
-    current_sections: list[LetterSection], user_message: str, field_updates: dict
+async def _targeted_edit(
+    current_letter_text: str, user_message: str, field_updates: dict
 ) -> tuple[AppealLetterResponse, str]:
-    """Make targeted edits to letter sections. Returns (proposed_letter, changes_summary)."""
-    sections_json = json.dumps(
-        [{"type": s.type, "text": s.text} for s in current_sections],
-        indent=2,
-    )
-
+    """Make targeted edits to the letter text. Returns (proposed_letter, changes_summary)."""
     edit_instructions = user_message
     if field_updates:
         updates_str = ", ".join(f"{k}: {v}" for k, v in field_updates.items())
         edit_instructions = f"{user_message}\n\nAlso update these fields in the letter: {updates_str}"
 
     prompt = TARGETED_EDIT_PROMPT.format(
-        current_sections_json=sections_json,
+        current_letter_text=current_letter_text,
         user_message=edit_instructions,
     )
 
@@ -179,21 +173,13 @@ async def _targeted_edit_sections(
             text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
         result = json.loads(text)
     except Exception as e:
-        logger.error(f"Targeted section edit failed: {e}")
+        logger.error(f"Targeted edit failed: {e}")
         raise RuntimeError(f"Letter edit failed: {e}") from e
 
-    raw_sections = result.get("sections", [])
+    letter_text = result.get("letter_text", current_letter_text)
     changes_summary = result.get("changes_summary", "Changes applied to your letter.")
 
-    sections = []
-    for item in raw_sections:
-        if isinstance(item, dict) and "type" in item and "text" in item:
-            sections.append(LetterSection(type=item["type"], text=item["text"]))
-
-    letter_text = _sections_to_text(sections)
-
     return AppealLetterResponse(
-        letter_sections=sections,
         letter_text=letter_text,
         citations_used=[],
         confidence_note=None,
@@ -202,7 +188,6 @@ async def _targeted_edit_sections(
 
 
 async def _classify_intent(request: ChatRequest) -> dict:
-    """Use LLM to classify intent and extract field updates / answer in one call."""
     regulations_summary = ", ".join(
         reg.citation for reg in request.lookup.applicable_regulations
     ) if request.lookup.applicable_regulations else "None loaded"
@@ -239,10 +224,8 @@ async def _classify_intent(request: ChatRequest) -> dict:
 def _apply_field_updates(
     extraction: DenialExtractionResult, updates: dict
 ) -> DenialExtractionResult:
-    """Apply field updates to a copy of the extraction result."""
     if not updates:
         return extraction
-
     data = extraction.model_dump()
     allowed_fields = {
         "patient_name", "patient_id", "provider_name", "provider_npi",
@@ -253,5 +236,4 @@ def _apply_field_updates(
     for key, value in updates.items():
         if key in allowed_fields:
             data[key] = value
-
     return DenialExtractionResult(**data)

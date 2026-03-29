@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import ReactMarkdown from 'react-markdown'
+import { diffLines } from 'diff'
 
 const HIGHLIGHT_COLORS = [
   { label: 'Yellow', bg: 'rgba(253,224,71,0.50)', swatch: '#fde047' },
@@ -7,30 +9,25 @@ const HIGHLIGHT_COLORS = [
   { label: 'Rose',   bg: 'rgba(249,168,212,0.45)', swatch: '#f9a8d4' },
 ]
 
+/* ── Shared UI components ── */
+
 function MarkdownLine({ text }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/)
-  return (
-    <>
-      {parts.map((p, i) =>
-        p.startsWith('**') && p.endsWith('**')
-          ? <strong key={i} style={{ color: '#5C4033', fontWeight: 600 }}>{p.slice(2, -2)}</strong>
-          : <span key={i}>{p}</span>
-      )}
-    </>
-  )
+  return <>{parts.map((p, i) =>
+    p.startsWith('**') && p.endsWith('**')
+      ? <strong key={i} style={{ color: '#5C4033', fontWeight: 600 }}>{p.slice(2, -2)}</strong>
+      : <span key={i}>{p}</span>
+  )}</>
 }
 
 function ChatMessage({ message }) {
   const isUser = message.role === 'user'
   return (
     <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      <div
-        className="max-w-[90%] text-sm leading-relaxed"
+      <div className="max-w-[90%] text-sm leading-relaxed"
         style={isUser
           ? { background: '#FFFFFF', color: '#5C4033', border: '1px solid rgba(92,64,51,0.25)', borderRadius: '12px 12px 4px 12px', padding: '10px 14px' }
-          : { background: '#FFFFFF', color: '#7C6553', border: '1px solid rgba(92,64,51,0.12)', borderRadius: '12px 12px 12px 4px', padding: '10px 14px' }
-        }
-      >
+          : { background: '#FFFFFF', color: '#7C6553', border: '1px solid rgba(92,64,51,0.12)', borderRadius: '12px 12px 12px 4px', padding: '10px 14px' }}>
         {message.content.split('\n').map((line, i) => (
           <p key={i} className={line === '' ? 'mt-2' : line.startsWith('•') ? 'ml-2 my-0.5' : ''}>
             <MarkdownLine text={line} />
@@ -44,9 +41,7 @@ function ChatMessage({ message }) {
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-1.5 px-1 py-2">
-      {[0, 150, 300].map((delay) => (
-        <span key={delay} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#C9B99A', animationDelay: `${delay}ms` }} />
-      ))}
+      {[0, 150, 300].map((d) => <span key={d} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: '#C9B99A', animationDelay: `${d}ms` }} />)}
     </div>
   )
 }
@@ -94,109 +89,40 @@ function SelectionToolbar({ popup, onHighlight, onAskAbout }) {
   )
 }
 
-/* ── Section type → style mapping ── */
-const SECTION_STYLES = {
-  sender:          { color: '#5C4033', fontWeight: 600 },
-  date:            { color: '#7C6553' },
-  recipient:       { color: '#5C4033', fontWeight: 600 },
-  subject:         { color: '#5C4033', fontWeight: 700 },
-  greeting:        { color: '#7C6553' },
-  body:            { color: '#7C6553' },
-  evidence_header: { color: '#5C4033', fontWeight: 600 },
-  evidence_item:   { color: '#7C6553', paddingLeft: 16 },
-  closing:         { color: '#7C6553' },
-  signature:       { color: '#5C4033', fontWeight: 600 },
-  disclaimer:      { color: '#A08060', fontSize: 11, fontStyle: 'italic' },
+/* ── Markdown renderer components for ReactMarkdown ── */
+const markdownComponents = {
+  strong: ({ children }) => <strong style={{ color: '#5C4033', fontWeight: 600 }}>{children}</strong>,
+  p: ({ children }) => <p className="mb-3" style={{ color: '#7C6553' }}>{children}</p>,
+  li: ({ children }) => <li className="ml-4 mb-1" style={{ color: '#7C6553' }}>{children}</li>,
+  ul: ({ children }) => <ul className="mb-3 list-disc pl-4">{children}</ul>,
+  h1: ({ children }) => <p className="mb-3" style={{ color: '#5C4033', fontWeight: 700, fontSize: 15 }}>{children}</p>,
+  h2: ({ children }) => <p className="mb-2" style={{ color: '#5C4033', fontWeight: 600 }}>{children}</p>,
+  h3: ({ children }) => <p className="mb-2" style={{ color: '#5C4033', fontWeight: 600 }}>{children}</p>,
 }
 
-/* ── Render a single editable section ── */
-function SectionRenderer({ section, onEdit }) {
-  const ref = useRef(null)
-  const style = SECTION_STYLES[section.type] || { color: '#7C6553' }
-  const isDisclaimer = section.type === 'disclaimer'
-
+/* ── Diff view ── */
+function DiffView({ oldText, newText }) {
+  const changes = diffLines(oldText, newText)
   return (
-    <div
-      ref={ref}
-      contentEditable={!isDisclaimer}
-      suppressContentEditableWarning
-      onBlur={() => {
-        if (ref.current && onEdit) {
-          onEdit(ref.current.innerText)
+    <div className="px-10 py-8 text-sm leading-relaxed space-y-1" style={{ color: '#7C6553' }}>
+      {changes.map((part, i) => {
+        const lines = part.value.split('\n').filter(l => l)
+        if (part.added) {
+          return lines.map((line, j) => (
+            <p key={`${i}-${j}`} style={{ background: 'rgba(34,197,94,0.12)', padding: '2px 4px', borderRadius: 3 }}><MarkdownLine text={line} /></p>
+          ))
         }
-      }}
-      className={`outline-none ${isDisclaimer ? '' : 'hover:bg-[rgba(92,64,51,0.03)] rounded transition-colors'}`}
-      style={{ ...style, whiteSpace: 'pre-wrap', cursor: isDisclaimer ? 'default' : 'text', padding: '2px 0' }}
-    >
-      {section.text}
+        if (part.removed) {
+          return lines.map((line, j) => (
+            <p key={`${i}-${j}`} style={{ background: 'rgba(239,68,68,0.12)', textDecoration: 'line-through', opacity: 0.7, padding: '2px 4px', borderRadius: 3 }}><MarkdownLine text={line} /></p>
+          ))
+        }
+        return lines.map((line, j) => (
+          <p key={`${i}-${j}`}><MarkdownLine text={line} /></p>
+        ))
+      })}
     </div>
   )
-}
-
-/* ── Section-based letter view ── */
-function LetterView({ sections, onSectionEdit }) {
-  if (!sections || sections.length === 0) {
-    return (
-      <div className="px-10 py-16 text-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            {[0, 150, 300].map((delay) => (
-              <span key={delay} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#C9B99A', animationDelay: `${delay}ms` }} />
-            ))}
-          </div>
-          <p className="text-sm" style={{ color: '#A08060' }}>Analyzing your document and generating appeal...</p>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div className="px-10 py-8 text-sm leading-relaxed space-y-4">
-      {sections.map((section, i) => (
-        <SectionRenderer
-          key={`${i}-${section.type}`}
-          section={section}
-          onEdit={(newText) => onSectionEdit(i, newText)}
-        />
-      ))}
-    </div>
-  )
-}
-
-/* ── Section-based diff view ── */
-function SectionDiffView({ oldSections, newSections }) {
-  const maxLen = Math.max(oldSections.length, newSections.length)
-  const rows = []
-
-  for (let i = 0; i < maxLen; i++) {
-    const oldS = oldSections[i]
-    const newS = newSections[i]
-
-    if (oldS && newS && oldS.type === newS.type && oldS.text === newS.text) {
-      // Unchanged
-      const style = SECTION_STYLES[oldS.type] || { color: '#7C6553' }
-      rows.push(<div key={i} style={{ ...style, whiteSpace: 'pre-wrap', padding: '2px 0' }}>{oldS.text}</div>)
-    } else {
-      // Changed, removed, or added
-      if (oldS) {
-        const style = SECTION_STYLES[oldS.type] || { color: '#7C6553' }
-        rows.push(
-          <div key={`${i}-old`} style={{ ...style, whiteSpace: 'pre-wrap', background: 'rgba(239,68,68,0.12)', textDecoration: 'line-through', opacity: 0.7, padding: '2px 4px', borderRadius: 3 }}>
-            {oldS.text}
-          </div>
-        )
-      }
-      if (newS) {
-        const style = SECTION_STYLES[newS.type] || { color: '#7C6553' }
-        rows.push(
-          <div key={`${i}-new`} style={{ ...style, whiteSpace: 'pre-wrap', background: 'rgba(34,197,94,0.12)', padding: '2px 4px', borderRadius: 3 }}>
-            {newS.text}
-          </div>
-        )
-      }
-    }
-  }
-
-  return <div className="px-10 py-8 text-sm leading-relaxed space-y-4">{rows}</div>
 }
 
 /* ── Approval card ── */
@@ -218,11 +144,6 @@ function ApprovalCard({ onAccept, onReject }) {
   )
 }
 
-/* ── Helper: sections → plain text for download ── */
-function sectionsToText(sections) {
-  return sections.map(s => s.type === 'evidence_item' ? `  - ${s.text}` : s.text).join('\n\n')
-}
-
 
 export default function AppealResultPage({ onBack, formData }) {
   const [messages, setMessages] = useState([])
@@ -233,13 +154,14 @@ export default function AppealResultPage({ onBack, formData }) {
   const [askContext, setAskContext] = useState(null)
   const [docsExpanded, setDocsExpanded] = useState(false)
   const [pipelineData, setPipelineData] = useState(null)
-  const [letterSections, setLetterSections] = useState([])
+  const [letterText, setLetterText] = useState('')
+  const [editMode, setEditMode] = useState(false)
   const [pendingEdit, setPendingEdit] = useState(null)
   const bottomRef = useRef(null)
   const documentRef = useRef(null)
   const inputRef = useRef(null)
 
-  // ── Initial load: call backend pipeline ──
+  // ── Initial load ──
   useEffect(() => {
     async function loadAppeal() {
       try {
@@ -264,24 +186,21 @@ export default function AppealResultPage({ onBack, formData }) {
             }),
           })
         }
-
         if (res && res.ok) {
           const data = await res.json()
           setPipelineData(data)
-          setLetterSections(data.appeal_letter.letter_sections || [])
+          setLetterText(data.appeal_letter.letter_text)
           const ext = data.extraction
           const codes = ext.denied_cpt_codes?.join(', ') || 'unknown'
           const carc = ext.carc_code || 'unknown'
           const dtype = ext.denial_type?.replace(/_/g, ' ') || 'unknown'
           const deadline = ext.appeal_deadline || 'check your denial letter'
-          const summary =
+          setMessages([{ role: 'assistant', content:
             `Your appeal disputes the denial of **${codes}** under code **${carc}**.\n\n` +
             `Denial type: **${dtype}**. Appeal deadline: **${deadline}**.\n\n` +
             `What would you like to change or strengthen?`
-          setMessages([{ role: 'assistant', content: summary }])
+          }])
         } else {
-          const errText = res ? await res.text() : 'No response'
-          console.error('Pipeline error:', errText)
           setMessages([{ role: 'assistant', content: 'There was an error processing your document. Please try again.' }])
         }
       } catch (err) {
@@ -293,13 +212,12 @@ export default function AppealResultPage({ onBack, formData }) {
     loadAppeal()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isLoading, isSending])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, isLoading, isSending])
 
-  // ── Text selection handling ──
+  // ── Text selection (read mode only) ──
   useEffect(() => {
     const handleMouseUp = () => {
+      if (editMode) return
       setTimeout(() => {
         const selection = window.getSelection()
         if (!selection || selection.isCollapsed || !selection.toString().trim()) { setSelectionPopup(null); return }
@@ -313,7 +231,7 @@ export default function AppealResultPage({ onBack, formData }) {
     document.addEventListener('mouseup', handleMouseUp)
     document.addEventListener('mousedown', handleMouseDown)
     return () => { document.removeEventListener('mouseup', handleMouseUp); document.removeEventListener('mousedown', handleMouseDown) }
-  }, [])
+  }, [editMode])
 
   const applyHighlight = useCallback((color) => {
     const selection = window.getSelection()
@@ -321,10 +239,8 @@ export default function AppealResultPage({ onBack, formData }) {
     try {
       const range = selection.getRangeAt(0)
       const span = document.createElement('span')
-      span.style.backgroundColor = color
-      span.style.borderRadius = '2px'
-      span.style.padding = '1px 0'
-      try { range.surroundContents(span) } catch { const fragment = range.extractContents(); span.appendChild(fragment); range.insertNode(span) }
+      span.style.backgroundColor = color; span.style.borderRadius = '2px'; span.style.padding = '1px 0'
+      try { range.surroundContents(span) } catch { const f = range.extractContents(); span.appendChild(f); range.insertNode(span) }
       selection.removeAllRanges()
     } catch (err) { console.error('Highlight error:', err) }
     setSelectionPopup(null)
@@ -333,23 +249,13 @@ export default function AppealResultPage({ onBack, formData }) {
   const handleAskAbout = useCallback(() => {
     if (!selectionPopup?.text) return
     const text = selectionPopup.text
-    const truncated = text.length > 70 ? text.slice(0, 70) + '\u2026' : text
-    setAskContext({ text, truncated })
+    setAskContext({ text, truncated: text.length > 70 ? text.slice(0, 70) + '\u2026' : text })
     setSelectionPopup(null)
     window.getSelection()?.removeAllRanges()
     setTimeout(() => inputRef.current?.focus(), 80)
   }, [selectionPopup])
 
-  // ── Section edit (user typing directly) ──
-  const handleSectionEdit = useCallback((index, newText) => {
-    setLetterSections(prev => {
-      const updated = [...prev]
-      updated[index] = { ...updated[index], text: newText }
-      return updated
-    })
-  }, [])
-
-  // ── Chat send with intent-aware handling ──
+  // ── Chat ──
   const handleSend = async () => {
     if (isSending || !pipelineData) return
     const text = input.trim()
@@ -359,9 +265,7 @@ export default function AppealResultPage({ onBack, formData }) {
     if (askContext) {
       messageContent = `About this passage: "${askContext.text}"\n\n${text || 'Can you explain this?'}`
     }
-
-    setInput('')
-    setAskContext(null)
+    setInput(''); setAskContext(null)
     setMessages((prev) => [...prev, { role: 'user', content: messageContent }])
     setIsSending(true)
 
@@ -371,7 +275,7 @@ export default function AppealResultPage({ onBack, formData }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_message: messageContent,
-          current_letter_sections: letterSections,
+          current_letter_text: letterText,
           extraction: pipelineData.extraction,
           lookup: pipelineData.lookup,
           conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
@@ -382,8 +286,9 @@ export default function AppealResultPage({ onBack, formData }) {
       setMessages((prev) => [...prev, { role: 'assistant', content: data.assistant_message }])
 
       if ((data.intent === 'edit' || data.intent === 'both') && data.proposed_letter) {
+        setEditMode(false) // auto-switch to read mode to show diff
         setPendingEdit({
-          proposedSections: data.proposed_letter.letter_sections || [],
+          proposedText: data.proposed_letter.letter_text,
           proposedExtraction: data.proposed_extraction,
           additionalContext: data.additional_context,
         })
@@ -397,7 +302,7 @@ export default function AppealResultPage({ onBack, formData }) {
 
   const handleAcceptEdit = () => {
     if (!pendingEdit) return
-    setLetterSections(pendingEdit.proposedSections)
+    setLetterText(pendingEdit.proposedText)
     setPipelineData((prev) => ({
       ...prev,
       extraction: pendingEdit.proposedExtraction || prev.extraction,
@@ -407,21 +312,14 @@ export default function AppealResultPage({ onBack, formData }) {
   }
 
   const handleRejectEdit = () => { setPendingEdit(null) }
-
   const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }
 
   const handleDownload = useCallback(() => {
-    const content = sectionsToText(letterSections) || 'No letter generated yet.'
-    const blob = new Blob([content], { type: 'text/plain' })
+    const blob = new Blob([letterText || 'No letter generated yet.'], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'Appeal_Letter.txt'
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, [letterSections])
+    const a = document.createElement('a'); a.href = url; a.download = 'Appeal_Letter.txt'
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
+  }, [letterText])
 
   const canSend = (input.trim() || askContext) && !isSending && pipelineData
   const requiredEvidence = pipelineData?.lookup?.required_evidence ?? []
@@ -441,27 +339,65 @@ export default function AppealResultPage({ onBack, formData }) {
         </div>
 
         <div ref={documentRef} className="max-w-[640px] mx-auto rounded-xl shadow-sm overflow-hidden select-text relative" style={{ background: '#FFFFFF', border: '1px solid rgba(92,64,51,0.10)' }}>
-          {/* Letter header chrome */}
+          {/* Letter header with toggle + download */}
           <div className="px-10 py-6 relative" style={{ borderBottom: '1px solid #F5EDE6' }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#C9B99A' }}>Appeal Letter — Draft</p>
             <p className="text-xs" style={{ color: '#C9B99A' }}>
               Generated {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
-            <button type="button" onClick={handleDownload} disabled={letterSections.length === 0}
-              className="absolute top-4 right-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:opacity-30"
-              style={{ background: '#FFFFFF', color: '#7C6553', border: '1px solid rgba(92,64,51,0.14)' }}>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Download
-            </button>
+
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+              {/* Edit/Preview toggle */}
+              {letterText && !pendingEdit && (
+                <button type="button" onClick={() => setEditMode(!editMode)}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70"
+                  style={{ background: editMode ? '#5C4033' : '#FFFFFF', color: editMode ? '#FFFFFF' : '#7C6553', border: '1px solid rgba(92,64,51,0.14)' }}>
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {editMode
+                      ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    }
+                  </svg>
+                  {editMode ? 'Preview' : 'Edit'}
+                </button>
+              )}
+              {/* Download */}
+              <button type="button" onClick={handleDownload} disabled={!letterText}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:opacity-30"
+                style={{ background: '#FFFFFF', color: '#7C6553', border: '1px solid rgba(92,64,51,0.14)' }}>
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download
+              </button>
+            </div>
           </div>
 
-          {/* Letter body — sections or diff */}
+          {/* Letter body */}
           {pendingEdit ? (
-            <SectionDiffView oldSections={letterSections} newSections={pendingEdit.proposedSections} />
+            <DiffView oldText={letterText} newText={pendingEdit.proposedText} />
+          ) : editMode ? (
+            <div className="px-10 py-8">
+              <textarea
+                value={letterText}
+                onChange={(e) => setLetterText(e.target.value)}
+                className="w-full outline-none resize-none text-sm leading-relaxed"
+                style={{ color: '#7C6553', fontFamily: "'Inter', monospace", minHeight: 500, background: 'transparent' }}
+              />
+            </div>
+          ) : letterText ? (
+            <div className="px-10 py-8 text-sm leading-relaxed">
+              <ReactMarkdown components={markdownComponents}>{letterText}</ReactMarkdown>
+            </div>
           ) : (
-            <LetterView sections={letterSections} onSectionEdit={handleSectionEdit} />
+            <div className="px-10 py-16 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  {[0, 150, 300].map((d) => <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#C9B99A', animationDelay: `${d}ms` }} />)}
+                </div>
+                <p className="text-sm" style={{ color: '#A08060' }}>Analyzing your document and generating appeal...</p>
+              </div>
+            </div>
           )}
 
           {/* Supporting documents */}

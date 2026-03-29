@@ -1,7 +1,5 @@
-import json
 import logging
 import os
-import re
 from datetime import date
 
 from google import genai
@@ -10,7 +8,6 @@ from google.genai import types
 from app.models.schemas import (
     AppealLetterResponse,
     DenialExtractionResult,
-    LetterSection,
     RegulatoryLookupResult,
 )
 
@@ -76,35 +73,15 @@ INSTRUCTIONS:
 {additional_instructions}
 
 OUTPUT FORMAT:
-Return a JSON array of letter sections. Each section is an object with "type" and "text" fields.
-
-Valid section types: "sender", "date", "recipient", "subject", "greeting", "body", "evidence_header", "evidence_item", "closing", "signature", "disclaimer"
-
-Example structure:
-[
-  {{"type": "sender", "text": "Patient Name\\nPatient ID: XXX"}},
-  {{"type": "date", "text": "March 29, 2026"}},
-  {{"type": "recipient", "text": "Insurance Company\\nAppeals Department\\nAddress"}},
-  {{"type": "subject", "text": "Appeal of Denial for CPT XXXXX"}},
-  {{"type": "greeting", "text": "Dear Appeals Department,"}},
-  {{"type": "body", "text": "First paragraph of the appeal..."}},
-  {{"type": "body", "text": "Second paragraph with specific argument..."}},
-  {{"type": "evidence_header", "text": "I am including the following supporting documentation:"}},
-  {{"type": "evidence_item", "text": "Denial notice or EOB"}},
-  {{"type": "evidence_item", "text": "Treating physician letter"}},
-  {{"type": "closing", "text": "I request that you overturn this denial..."}},
-  {{"type": "signature", "text": "Sincerely,\\nPatient Name"}},
-  {{"type": "disclaimer", "text": "DISCLAIMER: ..."}}
-]
-
-Each body paragraph should be its own section. Each evidence item should be its own section.
-Return ONLY the JSON array."""
+Return the letter as markdown-formatted text. Use:
+- **bold** for the subject line and section headers
+- Blank lines between paragraphs
+- `- ` for evidence bullet items
+Return ONLY the letter text, no metadata or explanation."""
 
 
 def _build_claim_info(extraction: DenialExtractionResult, lookup: RegulatoryLookupResult) -> str:
-    """Build claim info section dynamically, omitting null fields."""
     lines = []
-
     def add(label: str, value: str | None):
         if value:
             lines.append(f"- {label}: {value}")
@@ -144,7 +121,6 @@ def _build_claim_info(extraction: DenialExtractionResult, lookup: RegulatoryLook
 def _format_regulations(lookup: RegulatoryLookupResult) -> str:
     if not lookup.applicable_regulations:
         return "No specific regulations available in the database for this denial type."
-
     lines = []
     for i, reg in enumerate(lookup.applicable_regulations, 1):
         header = f"{i}. {reg.citation}"
@@ -160,7 +136,6 @@ def _format_regulations(lookup: RegulatoryLookupResult) -> str:
 def _format_grounds(lookup: RegulatoryLookupResult) -> str:
     if not lookup.appeal_grounds:
         return "No specific appeal grounds available in the database for this denial type."
-
     return "\n".join(f"{i}. {g}" for i, g in enumerate(lookup.appeal_grounds, 1))
 
 
@@ -170,32 +145,12 @@ def _format_template_section(lookup: RegulatoryLookupResult) -> str:
     return ""
 
 
-def _sanitize_json(text: str) -> str:
-    """Strip markdown fences from JSON response."""
-    text = text.strip()
-    text = re.sub(r"^```json\s*", "", text)
-    text = re.sub(r"^```\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    return text.strip()
-
-
-def _sections_to_text(sections: list[LetterSection]) -> str:
-    """Convert sections to plain text for export/download."""
-    lines = []
-    for s in sections:
-        if s.type == "evidence_item":
-            lines.append(f"  - {s.text}")
-        else:
-            lines.append(s.text)
-    return "\n\n".join(lines)
-
-
 async def generate_appeal_letter(
     extraction: DenialExtractionResult,
     lookup: RegulatoryLookupResult,
     additional_context: str = "",
 ) -> AppealLetterResponse:
-    """Stage 3: Use Gemini to compose an appeal letter as structured JSON sections."""
+    """Stage 3: Use Gemini to compose an appeal letter as markdown text."""
 
     confidence_caveat = ""
     if extraction.confidence != "high":
@@ -253,35 +208,14 @@ async def generate_appeal_letter(
         response = _get_client().models.generate_content(
             model=MODEL,
             contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.3,
-            ),
+            config=types.GenerateContentConfig(temperature=0.3),
         )
     except Exception as e:
         logger.error(f"Gemini generation call failed: {e}")
         raise RuntimeError(f"LLM generation failed: {e}") from e
 
-    response_text = _sanitize_json(response.text)
+    letter_text = response.text.strip()
 
-    try:
-        raw_sections = json.loads(response_text)
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse generation JSON: {response_text[:300]}")
-        raise RuntimeError(f"LLM returned invalid JSON: {e}") from e
-
-    # Parse into LetterSection list
-    if not isinstance(raw_sections, list):
-        raw_sections = []
-
-    sections = []
-    for item in raw_sections:
-        if isinstance(item, dict) and "type" in item and "text" in item:
-            sections.append(LetterSection(type=item["type"], text=item["text"]))
-
-    letter_text = _sections_to_text(sections)
-
-    # Extract citations used
     citations_used = []
     for reg in lookup.applicable_regulations:
         if reg.citation in letter_text:
@@ -295,7 +229,6 @@ async def generate_appeal_letter(
         )
 
     return AppealLetterResponse(
-        letter_sections=sections,
         letter_text=letter_text,
         citations_used=citations_used,
         confidence_note=confidence_note,

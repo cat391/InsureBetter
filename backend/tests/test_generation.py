@@ -9,7 +9,7 @@ from app.models.schemas import (
     RegulationEntry,
     RegulatoryLookupResult,
 )
-from tests.conftest import SAMPLE_APPEAL_SECTIONS, SAMPLE_EXTRACTION_JSON, SAMPLE_DENIAL_TEXT
+from tests.conftest import SAMPLE_APPEAL_LETTER, SAMPLE_EXTRACTION_JSON, SAMPLE_DENIAL_TEXT
 
 
 def _make_mock_client(response_text: str):
@@ -26,7 +26,6 @@ class TestGenerateAppealLetter:
         from app.services.generation import generate_appeal_letter
         result = await generate_appeal_letter(sample_extraction_result, sample_lookup_result)
         assert isinstance(result, AppealLetterResponse)
-        assert len(result.letter_sections) > 0
         assert len(result.letter_text) > 50
 
     @pytest.mark.asyncio
@@ -55,13 +54,12 @@ class TestGenerateAppealLetter:
     @pytest.mark.asyncio
     async def test_empty_lookup_still_produces_letter(self, sample_extraction_result):
         empty_lookup = RegulatoryLookupResult()
-        empty_sections = [{"type": "body", "text": "I am appealing this denial."}]
-        mock_client = _make_mock_client(json.dumps(empty_sections))
+        mock_client = _make_mock_client("I am appealing this denial.\n\nSincerely, Patient.")
         with patch("app.services.generation._get_client", return_value=mock_client):
             from app.services.generation import generate_appeal_letter
             result = await generate_appeal_letter(sample_extraction_result, empty_lookup)
             assert isinstance(result, AppealLetterResponse)
-            assert len(result.letter_sections) > 0
+            assert len(result.letter_text) > 0
             assert result.citations_used == []
 
     @pytest.mark.asyncio
