@@ -265,9 +265,16 @@ export default function AppealResultPage({ onBack, formData }) {
     if (askContext) {
       messageContent = `About this passage: "${askContext.text}"\n\n${text || 'Can you explain this?'}`
     }
-    setInput(''); setAskContext(null)
-    setMessages((prev) => [...prev, { role: 'user', content: messageContent }])
+
+    // Capture current messages before clearing input (avoid stale closures)
+    const currentMessages = [...messages]
+    const userMsg = { role: 'user', content: messageContent }
+
+    // Batch all pre-send state updates together
+    setInput('')
+    setAskContext(null)
     setIsSending(true)
+    setMessages([...currentMessages, userMsg])
 
     try {
       const res = await fetch('/api/appeal/chat', {
@@ -278,15 +285,25 @@ export default function AppealResultPage({ onBack, formData }) {
           current_letter_text: letterText,
           extraction: pipelineData.extraction,
           lookup: pipelineData.lookup,
-          conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+          conversation_history: currentMessages.map(m => ({ role: m.role, content: m.content })),
           additional_context: pipelineData.additional_context || '',
         }),
       })
+
+      if (!res.ok) {
+        const errBody = await res.text()
+        console.error('Chat API returned non-200:', res.status, errBody)
+        setMessages((prev) => [...prev, { role: 'assistant', content: `Error (${res.status}): The server encountered an issue. Please try again.` }])
+        setIsSending(false)
+        return
+      }
+
       const data = await res.json()
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.assistant_message }])
+      const reply = data.assistant_message || 'I received your message but had no response to give.'
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
 
       if ((data.intent === 'edit' || data.intent === 'both') && data.proposed_letter) {
-        setEditMode(false) // auto-switch to read mode to show diff
+        setEditMode(false)
         setPendingEdit({
           proposedText: data.proposed_letter.letter_text,
           proposedExtraction: data.proposed_extraction,
@@ -295,9 +312,10 @@ export default function AppealResultPage({ onBack, formData }) {
       }
     } catch (err) {
       console.error('Chat API error:', err)
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Sorry, I couldn\'t reach the server. Please check your connection and try again.' }])
+    } finally {
+      setIsSending(false)
     }
-    setIsSending(false)
   }
 
   const handleAcceptEdit = () => {
