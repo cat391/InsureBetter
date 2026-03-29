@@ -202,8 +202,10 @@ function DiffView({ oldText, newText }) {
   )
 }
 
-/* ── Letter view: renders letter_text with markdown support ── */
-function LetterView({ text }) {
+/* ── Letter view: editable letter with contentEditable ── */
+function LetterView({ text, onTextChange }) {
+  const editRef = useRef(null)
+
   if (!text) {
     return (
       <div className="px-10 py-16 text-center">
@@ -219,13 +221,19 @@ function LetterView({ text }) {
     )
   }
   return (
-    <div className="px-10 py-8 text-sm leading-relaxed space-y-4" style={{ color: '#7C6553' }}>
-      {text.split('\n').map((line, i) => {
-        if (!line.trim()) return <div key={i} className="h-3" />
-        if (line.startsWith('* ') || line.startsWith('- '))
-          return <p key={i} className="pl-4"><MarkdownLine text={line} /></p>
-        return <p key={i}><MarkdownLine text={line} /></p>
-      })}
+    <div
+      ref={editRef}
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={() => {
+        if (editRef.current && onTextChange) {
+          onTextChange(editRef.current.innerText)
+        }
+      }}
+      className="px-10 py-8 text-sm leading-relaxed outline-none"
+      style={{ color: '#7C6553', whiteSpace: 'pre-wrap', cursor: 'text' }}
+    >
+      {text}
     </div>
   )
 }
@@ -428,6 +436,7 @@ export default function AppealResultPage({ onBack, formData }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_message: messageContent,
+          current_letter_text: letterText,
           extraction: pipelineData.extraction,
           lookup: pipelineData.lookup,
           conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
@@ -554,7 +563,7 @@ export default function AppealResultPage({ onBack, formData }) {
           {pendingEdit ? (
             <DiffView oldText={letterText} newText={pendingEdit.proposedLetter.letter_text} />
           ) : (
-            <LetterView text={letterText} />
+            <LetterView text={letterText} onTextChange={setLetterText} />
           )}
 
           {/* Supporting documents */}

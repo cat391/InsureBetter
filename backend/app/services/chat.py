@@ -6,6 +6,7 @@ from google import genai
 from google.genai import types
 
 from app.models.schemas import (
+    AppealLetterResponse,
     ChatMessage,
     ChatRequest,
     ChatResponse,
@@ -57,11 +58,28 @@ Return a JSON object with these fields:
 
 Return ONLY valid JSON."""
 
+TARGETED_EDIT_PROMPT = """You are editing an existing insurance appeal letter. Make ONLY the specific changes the user requested. Keep everything else EXACTLY the same — same citations, same structure, same formatting, same wording for unchanged sections.
+
+CURRENT LETTER:
+{current_letter_text}
+
+USER REQUEST:
+{user_message}
+
+RULES:
+1. Only modify the parts of the letter that directly relate to the user's request.
+2. Do NOT add, remove, or modify any regulatory citations unless explicitly asked.
+3. Do NOT rewrite paragraphs that weren't mentioned — copy them exactly as-is.
+4. Keep the same overall structure and formatting.
+5. Preserve the DISCLAIMER at the end exactly as-is.
+
+Return the complete letter with your changes applied. Return ONLY the letter text."""
+
 
 async def process_chat_message(request: ChatRequest) -> ChatResponse:
     """Process a chat message with intent classification."""
 
-    # Step 1: Classify intent + get answer/field_updates in one call
+    # Step 1: Classify intent
     intent_result = await _classify_intent(request)
 
     intent = intent_result.get("intent", "question")
@@ -74,7 +92,6 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
     updated_history.append(ChatMessage(role="user", content=request.user_message))
 
     if intent == "question":
-        # Question only — answer without touching the letter
         assistant_message = answer or "I'm not sure how to answer that. Could you rephrase?"
         updated_history.append(ChatMessage(role="assistant", content=assistant_message))
 
@@ -87,36 +104,31 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
             conversation_history=updated_history,
         )
 
-    # Intent is "edit" or "both" — regenerate letter through pipeline
+    # Intent is "edit" or "both"
     updated_extraction = _apply_field_updates(request.extraction, field_updates)
 
-    # Re-run lookup if denial_type changed
+    # If denial_type changed, need full pipeline regen
     if "denial_type" in field_updates:
         lookup = perform_full_lookup(updated_extraction)
-    else:
-        lookup = request.lookup
+        accumulated_context = request.additional_context
+        if edit_description:
+            accumulated_context = f"{accumulated_context}\n{edit_description}" if accumulated_context else edit_description
 
-    # Accumulate context for generation
-    new_context = edit_description or request.user_message
-    if request.additional_context:
-        accumulated_context = f"{request.additional_context}\n{new_context}"
+        proposed_letter = await generate_appeal_letter(
+            updated_extraction, lookup, additional_context=accumulated_context
+        )
     else:
-        accumulated_context = new_context
-
-    # Re-generate letter through the pipeline
-    proposed_letter = await generate_appeal_letter(
-        updated_extraction, lookup, additional_context=accumulated_context
-    )
+        # Targeted edit — modify current letter text directly
+        proposed_letter = await _targeted_edit(
+            request.current_letter_text, request.user_message, field_updates
+        )
+        accumulated_context = request.additional_context
 
     # Build assistant message
     if intent == "both" and answer:
-        assistant_message = f"{answer}\n\nI've also proposed changes to your letter based on your request."
+        assistant_message = f"{answer}\n\nI've also proposed changes to your letter."
     else:
-        fields_changed = ", ".join(field_updates.keys()) if field_updates else ""
-        if fields_changed:
-            assistant_message = f"I've proposed updates to your letter. Fields updated: {fields_changed}. {edit_description or ''}"
-        else:
-            assistant_message = f"I've proposed changes to your letter: {edit_description or 'adjustments based on your request'}."
+        assistant_message = f"I've proposed changes to your letter: {edit_description or 'adjustments based on your request'}."
 
     updated_history.append(ChatMessage(role="assistant", content=assistant_message))
 
@@ -127,6 +139,40 @@ async def process_chat_message(request: ChatRequest) -> ChatResponse:
         proposed_extraction=updated_extraction,
         additional_context=accumulated_context,
         conversation_history=updated_history,
+    )
+
+
+async def _targeted_edit(
+    current_letter_text: str, user_message: str, field_updates: dict
+) -> AppealLetterResponse:
+    """Make targeted edits to the current letter without full pipeline regen."""
+    # If we have field updates (e.g. name change), include them in the prompt
+    edit_instructions = user_message
+    if field_updates:
+        updates_str = ", ".join(f"{k}: {v}" for k, v in field_updates.items())
+        edit_instructions = f"{user_message}\n\nAlso update these fields in the letter: {updates_str}"
+
+    prompt = TARGETED_EDIT_PROMPT.format(
+        current_letter_text=current_letter_text,
+        user_message=edit_instructions,
+    )
+
+    try:
+        response = _get_client().models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.2),
+        )
+        edited_text = response.text.strip()
+    except Exception as e:
+        logger.error(f"Targeted edit failed: {e}")
+        raise RuntimeError(f"Letter edit failed: {e}") from e
+
+    return AppealLetterResponse(
+        letter_text=edited_text,
+        citations_used=[],
+        confidence_note=None,
+        denial_type=None,
     )
 
 
@@ -162,7 +208,6 @@ async def _classify_intent(request: ChatRequest) -> dict:
         return json.loads(text)
     except Exception as e:
         logger.warning(f"Intent classification failed: {e}")
-        # Default to question intent on failure
         return {"intent": "question", "answer": "I'm having trouble processing that. Could you try rephrasing?", "field_updates": {}}
 
 

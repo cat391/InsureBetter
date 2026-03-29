@@ -93,6 +93,7 @@ class GenerateRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     user_message: str
+    current_letter_text: str = ""
     extraction: DenialExtractionResult
     lookup: RegulatoryLookupResult
     conversation_history: list[ChatMessage] = Field(default_factory=list)
