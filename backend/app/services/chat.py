@@ -14,6 +14,7 @@ from app.models.schemas import (
 )
 from app.services.generation import generate_appeal_letter
 from app.services.lookup import perform_full_lookup
+from app.utils.gemini_retry import call_gemini_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ Applicable regulations: {regulations}
 User message: {user_message}
 
 Classify the intent as EXACTLY one of:
-- "question" — the user is asking for information or explanation
+- "question" — the user is asking for information or explanation, OR the user asks to add content that is clearly irrelevant to an insurance appeal (e.g. the Constitution, unrelated laws, jokes). In that case, explain why that content wouldn't help their appeal.
 - "edit" — the user wants to change the letter
 - "both" — the user asks a question AND wants a change
 
@@ -72,10 +73,17 @@ RULES:
 3. Do NOT rewrite paragraphs that weren't mentioned — copy them character-for-character.
 4. Keep the same markdown formatting (bold, bullets, etc.).
 5. Preserve the DISCLAIMER at the end exactly as-is.
+6. REJECT the edit if the user's request would make the letter inappropriate or ineffective:
+   - Adding irrelevant legal text (e.g. the US Constitution, Bill of Rights, unrelated statutes)
+   - Adding threats, profanity, or hostile/abusive language
+   - Adding fabricated medical information, fake citations, or made-up regulations
+   - Adding content unrelated to the insurance appeal (jokes, memes, recipes, etc.)
+   - Changes that would make the letter unprofessionally long or unfocused
+   If you reject, set "letter_text" to null and explain why in "changes_summary".
 
 Return a JSON object with TWO fields:
-- "letter_text": the complete letter with your changes applied (unchanged parts copied exactly)
-- "changes_summary": a brief explanation of what you changed and why (1-2 sentences)
+- "letter_text": the complete letter with your changes applied (unchanged parts copied exactly), or null if the edit was rejected
+- "changes_summary": a brief explanation of what you changed and why (1-2 sentences), or why the edit was rejected
 
 Return ONLY valid JSON."""
 
@@ -160,10 +168,11 @@ async def _targeted_edit(
     )
 
     try:
-        response = _get_client().models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
+        response = await call_gemini_with_retry(
+            _get_client(),
+            MODEL,
+            prompt,
+            types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.2,
             ),
@@ -176,8 +185,19 @@ async def _targeted_edit(
         logger.error(f"Targeted edit failed: {e}")
         raise RuntimeError(f"Letter edit failed: {e}") from e
 
-    letter_text = result.get("letter_text", current_letter_text)
+    letter_text = result.get("letter_text")
     changes_summary = result.get("changes_summary", "Changes applied to your letter.")
+
+    # If the LLM rejected the edit, return original letter unchanged
+    if letter_text is None:
+        return AppealLetterResponse(
+            letter_text=current_letter_text,
+            citations_used=[],
+            confidence_note=None,
+            denial_type=None,
+        ), changes_summary
+
+    letter_text = letter_text or current_letter_text
 
     return AppealLetterResponse(
         letter_text=letter_text,
@@ -204,10 +224,11 @@ async def _classify_intent(request: ChatRequest) -> dict:
     )
 
     try:
-        response = _get_client().models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
+        response = await call_gemini_with_retry(
+            _get_client(),
+            MODEL,
+            prompt,
+            types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.2,
             ),

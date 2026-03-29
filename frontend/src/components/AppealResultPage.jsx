@@ -218,6 +218,8 @@ export default function AppealResultPage({ onBack, formData }) {
             `Denial type: **${dtype}**. Appeal deadline: **${deadline}**.\n\n` +
             `What would you like to change or strengthen?`
           }])
+        } else if (res && res.status === 429) {
+          setMessages([{ role: 'assistant', content: 'We\'re experiencing high demand right now. Please wait a moment and try again.' }])
         } else {
           setMessages([{ role: 'assistant', content: 'There was an error processing your document. Please try again.' }])
         }
@@ -311,7 +313,10 @@ export default function AppealResultPage({ onBack, formData }) {
       if (!res.ok) {
         const errBody = await res.text()
         console.error('Chat API returned non-200:', res.status, errBody)
-        setMessages((prev) => [...prev, { role: 'assistant', content: `Error (${res.status}): The server encountered an issue. Please try again.` }])
+        const errMsg = res.status === 429
+          ? 'We\'re experiencing high demand right now. Please wait a moment and try again.'
+          : `Error (${res.status}): The server encountered an issue. Please try again.`
+        setMessages((prev) => [...prev, { role: 'assistant', content: errMsg }])
         setIsSending(false)
         return
       }
@@ -458,7 +463,13 @@ export default function AppealResultPage({ onBack, formData }) {
       {/* ── Right: Chat ── */}
       <div style={{ flex: '0 0 35%', position: 'sticky', top: 48, height: 'calc(100vh - 48px)', display: 'flex', flexDirection: 'column', background: '#FAF8F4', overflow: 'hidden', borderLeft: '1px solid rgba(92,64,51,0.08)' }}>
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
-          {isLoading ? <TypingIndicator /> : (
+          {isLoading ? (
+            <div className="flex items-start gap-2.5 px-1">
+              <div className="rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm" style={{ background: '#F0EBE3', color: '#A08060', maxWidth: '85%' }}>
+                Waiting for your appeal to be generated...
+              </div>
+            </div>
+          ) : (
             <>
               {messages.map((msg, i) => <ChatMessage key={i} message={msg} />)}
               {pendingEdit && <ApprovalCard onAccept={handleAcceptEdit} onReject={handleRejectEdit} />}

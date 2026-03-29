@@ -1,0 +1,11 @@
+backend/tests/
+backend/.env
+backend/.env.example
+docs/
+data/sample_denials/
+.git/
+__pycache__/
+*.pyc
+node_modules/
+.venv/
+venv/

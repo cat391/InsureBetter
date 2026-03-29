@@ -10,6 +10,7 @@ from app.models.schemas import (
     DenialExtractionResult,
     RegulatoryLookupResult,
 )
+from app.utils.gemini_retry import call_gemini_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -205,10 +206,11 @@ async def generate_appeal_letter(
     )
 
     try:
-        response = _get_client().models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.3),
+        response = await call_gemini_with_retry(
+            _get_client(),
+            MODEL,
+            prompt,
+            types.GenerateContentConfig(temperature=0.3),
         )
     except Exception as e:
         logger.error(f"Gemini generation call failed: {e}")

@@ -7,6 +7,7 @@ from google import genai
 from google.genai import types
 
 from app.models.schemas import DenialExtractionResult
+from app.utils.gemini_retry import call_gemini_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +66,11 @@ async def extract_denial_info(raw_text: str) -> DenialExtractionResult:
     prompt = EXTRACTION_PROMPT.format(raw_text=raw_text)
 
     try:
-        response = _get_client().models.generate_content(
-            model=MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
+        response = await call_gemini_with_retry(
+            _get_client(),
+            MODEL,
+            prompt,
+            types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.1,
             ),

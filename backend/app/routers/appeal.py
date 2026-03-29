@@ -24,6 +24,26 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/appeal", tags=["appeal"])
 
+
+def _raise_for_runtime_error(e: RuntimeError, stage: str):
+    """Raise HTTPException with 429 for rate limits, 422 for other errors."""
+    msg = str(e).lower()
+    if "rate limit" in msg or "429" in msg:
+        raise HTTPException(
+            status_code=429,
+            detail=ErrorResponse(
+                error="Rate limit exceeded",
+                detail="The AI service is experiencing high demand. Please wait a moment and try again.",
+                stage=stage,
+            ).model_dump(),
+        )
+    raise HTTPException(
+        status_code=422,
+        detail=ErrorResponse(
+            error=f"{stage.capitalize()} failed", detail=str(e), stage=stage
+        ).model_dump(),
+    )
+
 ALLOWED_TYPES = {
     "application/pdf",
     "image/png",
@@ -86,12 +106,7 @@ async def upload_and_process(file: UploadFile = File(...)):
     try:
         extraction = await extract_denial_info(raw_text)
     except RuntimeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=ErrorResponse(
-                error="Extraction failed", detail=str(e), stage="extraction"
-            ).model_dump(),
-        )
+        _raise_for_runtime_error(e, "extraction")
 
     # Stage 2: Regulatory lookup (deterministic, won't fail)
     lookup = perform_full_lookup(extraction)
@@ -100,12 +115,7 @@ async def upload_and_process(file: UploadFile = File(...)):
     try:
         appeal_letter = await generate_appeal_letter(extraction, lookup)
     except RuntimeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=ErrorResponse(
-                error="Letter generation failed", detail=str(e), stage="generation"
-            ).model_dump(),
-        )
+        _raise_for_runtime_error(e, "generation")
 
     elapsed = time.perf_counter() - start
 
@@ -194,12 +204,7 @@ async def manual_entry(request: ManualEntryRequest):
     try:
         appeal_letter = await generate_appeal_letter(extraction, lookup)
     except RuntimeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=ErrorResponse(
-                error="Letter generation failed", detail=str(e), stage="generation"
-            ).model_dump(),
-        )
+        _raise_for_runtime_error(e, "generation")
 
     elapsed = time.perf_counter() - start
 
@@ -221,12 +226,7 @@ async def generate_from_extraction(request: GenerateRequest):
     try:
         appeal_letter = await generate_appeal_letter(request.extraction, lookup)
     except RuntimeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=ErrorResponse(
-                error="Letter generation failed", detail=str(e), stage="generation"
-            ).model_dump(),
-        )
+        _raise_for_runtime_error(e, "generation")
 
     elapsed = time.perf_counter() - start
 
@@ -246,12 +246,7 @@ async def chat_refine(request: ChatRequest):
     try:
         return await process_chat_message(request)
     except RuntimeError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=ErrorResponse(
-                error="Chat processing failed", detail=str(e), stage="chat"
-            ).model_dump(),
-        )
+        _raise_for_runtime_error(e, "chat")
 
 
 @router.get("/health", response_model=HealthResponse)
